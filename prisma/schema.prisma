@@ -1,0 +1,190 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String         @id @default(uuid())
+  email              String         @unique
+  isEmailVerified    Boolean        @default(false)
+  firstName          String?
+  middleName         String?
+  lastName           String?
+  phoneNumber        String? // For contact, OTPs
+  avatar             String? // Profile photo URL
+  dateOfBirth        DateTime? // Age for medical context
+  gender             String? // "female", "male", "other"
+  address            String?
+  languagePreference String? // For personalized content
+  lastLoginAt        DateTime?
+  userType           UserType
+  password           String? // Nullable if they signed up via OAuth only
+  authProvider       AuthProvider[] // Relation to linked OAuth logins
+  refreshToken       String? // Optional
+  status             UserStatus
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  doctor              Doctor?
+  patient             Patient?
+  admin               Admin?
+  personalAccessToken PersonalAccessToken[]
+}
+
+model AuthProvider {
+  id                  String   @id @default(uuid())
+  user                User     @relation(fields: [userId], references: [id])
+  userId              String
+  provider            AuthenticationProviders // "google", "facebook", "apple", "email"
+  providerUserId      String // ID from the provider (e.g. Google UID)
+  createdAt           DateTime @default(now())
+
+  @@unique([provider, providerUserId]) // Prevent duplicates
+  @@unique([userId, provider, providerUserId]) // Prevent duplicates
+  @@unique([userId, provider]) // Prevent duplicates
+}
+
+model Doctor {
+  id                        String             @id @default(uuid()) @map("user_id")
+  specialization            String?
+  yearsOfExperience         Int?
+  hospitalAffiliation       String?
+  consultationFee           Float? // For paid consultations
+  bio                       String? // Short profile about the doctor
+  availableTimeSlots        Json? // Optional, for booking integration
+  facialVerificationImage   String?
+  idCardType                String?
+  idNumber                  String?
+  idExpiryDate              DateTime?
+  facialVerificationStatus  VerificationStatus?
+  idVerificationStatus      VerificationStatus?
+  license                   String? // url of license stored
+  licenseVerificationStatus VerificationStatus?
+  licenseExpiryDate         DateTime?
+  createdAt                 DateTime           @default(now())
+  updatedAt                 DateTime           @updatedAt
+  user                      User               @relation(fields: [id], references: [id], onDelete: Cascade)
+}
+
+model Patient {
+  id                String       @id @default(uuid()) @map("user_id")
+  emergencyContact  Json?
+  bloodType         String? // e.g., "A+", "O-"
+  genotype          String?
+  allergies         String[] // PostgreSQL supports array
+  chronicConditions String[] // e.g., ["PCOS", "Diabetes"]
+  cycleHistory      Cycle[] // Relation (see below)
+  hormoneLogs       HormoneLog[] // Relation (see below)
+  user              User         @relation(fields: [id], references: [id], onDelete: Cascade)
+}
+
+model Admin {
+  id   String @id @default(uuid()) @map("user_id")
+  user User   @relation(fields: [id], references: [id], onDelete: Cascade)
+}
+
+/**
+ * PersonalAccessToken - for all types of code verification e.g email, reset password, or delete account
+ */
+model PersonalAccessToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  token     String    @unique
+  type      TokenType
+  expiry    DateTime
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])
+  @@unique([type, token])
+  @@unique([userId, type, token])
+}
+
+model Cycle {
+  id        String   @id @default(uuid())
+  patient   Patient  @relation(fields: [patientId], references: [id])
+  patientId String
+  startDate DateTime
+  endDate   DateTime
+  symptoms  String[] // e.g., ["cramps", "headache"]
+  notes     String?
+}
+
+model HormoneLog {
+  id          String   @id @default(uuid())
+  patient     Patient  @relation(fields: [patientId], references: [id])
+  patientId   String
+  date        DateTime
+  hormoneType String // e.g., "estrogen", "progesterone"
+  level       Float
+  unit        String // e.g., "ng/dL"
+}
+
+model EducationalMaterial {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  fileUrl     String[]
+  tags        String[] // e.g., ["cycle", "hormones", "nutrition"]
+  uploadedBy  String?
+  createdAt   DateTime @default(now())
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  location    String?
+  date        DateTime
+  imageUrls   String[]
+}
+
+// test recommendation, prescription, calls and socket details
+
+enum UserType {
+  admin
+  doctor
+  patient
+}
+
+enum AuthenticationProviders {
+  google
+  apple
+  facebook
+}
+
+enum TokenType {
+  passwordReset
+  deleteAccount
+  verifyEmail
+  verifyPhone
+}
+
+enum VerificationStatus {
+  pending
+  approved
+  rejected
+}
+
+enum EmailVerificationStatus {
+  pending
+  verified
+}
+
+enum UserStatus {
+  active
+  restricted
+  deleted
+}
