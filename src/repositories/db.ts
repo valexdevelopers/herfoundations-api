@@ -1,6 +1,6 @@
 // src/lib/db.ts
 
-import { PrismaClient} from '../../prisma/generated/client'
+import { PrismaClient} from '../../@prisma/client'
 
 /**
  * Use a global variable in development to avoid creating new instances on hot reload.
