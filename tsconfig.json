@@ -19,7 +19,7 @@
   "include": ["src", "reflect.d.ts"],
   "ts-node": {
     "compilerOptions": {
-      "module": "commonjs"
+      "module": "nodenext"
     }
   }
 }

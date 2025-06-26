@@ -3,7 +3,7 @@ import { AuthController } from '../controllers/auth/AuthenticatedSession.control
 
 const router = Router();
 
-router.post('/register', AuthController.register);
+// router.get('/register', AuthController.register);
 router.post('/login', AuthController.login);
 
 export default router;
