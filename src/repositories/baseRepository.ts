@@ -90,5 +90,33 @@ export default abstract class BaseRepository<M> {
         return TRANSIENT_ERROR_CODES.includes(error.code || '')
     }
 
+    public generateCacheKey(prefix: string, id: string){
+        return `${prefix}:${id}`
+    }
+
+    public async setCache(key: string, value: any, ttl=this.#TTL): Promise<void> {
+        if(!this.#CACHE_MODE) return
+        await this.#withRetry(async () => {
+            await this.#cacheHandler.set(key, value, "EX", ttl)
+        }).catch(()=> {})
+        
+    }
+
+    public async getCache<R>(key: string):Promise<R | null>{
+        if(!this.#CACHE_MODE) return null
+
+        return await this.#withRetry(async () => {
+            const cachedResult = await this.#cacheHandler.get(key);
+            return cachedResult as R
+        }).catch(():Promise<R | null> => Promise.resolve(null))
+    }
+
+    public async invalidateCache(key: string):Promise<void>{
+        if(!this.#CACHE_MODE) return
+        return await this.#withRetry(async () => {
+            await this.#cacheHandler.del(key)
+        }).catch(() => {})
+    }
+
     
 }
