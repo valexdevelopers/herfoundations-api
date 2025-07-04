@@ -118,5 +118,33 @@ export default abstract class BaseRepository<M> {
         }).catch(() => {})
     }
 
+    public async create(){
+        try {
+            this.#withRetry( async () => {
+                const response = await this.#databaseService[this.#model].create({data:{}})
+            })
+        } catch (error) {
+            
+        }
+
+    }
+
+    public async createMany(){}
+
+    public async upsert(){}
     
+   
+
+    public async withTransaction(cb: (tx: Prisma.TransactionClient) => Promise<any>) {
+        try {
+            this.#logHandler.info(`${this.#model}/withTransaction`, JSON.stringify(cb))
+            return await this.#withRetry(async() => {
+                await this.#databaseService.$transaction(cb)
+            })
+        } catch (error) {
+            
+        }
+        
+    }
+
 }
