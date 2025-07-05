@@ -147,4 +147,32 @@ export default abstract class BaseRepository<M> {
         
     }
 
+    public async findOneById(id: string):Promise<any>{
+        let cachedData = null
+        let cacheKey = ''
+        if(this.#CACHE_MODE) {
+            cacheKey = this.generateCacheKey(String(this.#model), id)
+            cachedData = this.getCache(cacheKey)
+            if(!cachedData){
+                cachedData = await this.#databaseService[this.#model].findUnique({
+                    where: {
+                        id
+                    }
+                });
+                this.setCache(cacheKey, cachedData)
+            }
+            return cachedData
+        }
+        return await this.#databaseService[this.#model].findUnique({
+                    where: {
+                        id
+                    }
+                });
+    }
+    
+    public async findOneByEmail(email: string){}
+    public async findAll(data: any){}
+    public async delete(id: string, deletedBy: string, deleteReason:string ){}
+    public async permanentdelete(id: string){}
+    restore(id: string){}
 }
