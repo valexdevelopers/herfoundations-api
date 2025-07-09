@@ -4,17 +4,15 @@ import { CloudWatchLogsClient, CreateLogGroupCommand, CreateLogStreamCommand, De
 export default class Logger {
     #LogGroupName: string;
     #LogName = process.env.APPNAME || "HerFoundationsApi"
-    #AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID 
-    #AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY
-    #AWS_REGION = process.env.AWS_REGION
-    #client = new CloudWatchLogsClient({
-        region: this.#AWS_REGION, // Replace with your actual region
+    private static client = new CloudWatchLogsClient({
+        region: process.env.AWS_REGION, // Replace with your actual region
         credentials: {
-            accessKeyId: this.#AWS_ACCESS_KEY_ID ?? "",
-            secretAccessKey: this.#AWS_SECRET_ACCESS_KEY ?? "",
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? "",
+            secretAccessKey:process.env.AWS_SECRET_ACCESS_KEY ?? "",
         },
     })
-
+    #client = Logger.client
+    
     constructor(
         logGroupName: string
     ){

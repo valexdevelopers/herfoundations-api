@@ -11,12 +11,14 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 // singleton instance for prisma
-export const prisma =
+ const globalprisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     log: ['query', 'error', 'warn'], 
   })
 
 if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma
+  globalForPrisma.prisma = globalprisma
 }
+
+export default globalprisma

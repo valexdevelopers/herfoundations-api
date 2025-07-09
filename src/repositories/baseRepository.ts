@@ -2,7 +2,7 @@ import Logger from "../utils/log";
 import { ICacheHandler } from "../utils/interfaces/base.interfaces";
 import { Prisma, PrismaClient } from "@prisma/client";
 
-export default abstract class BaseRepository<M> {
+export default abstract class BaseRepository<M, T, U> {
 
     /** 
     * Base Repository
@@ -37,12 +37,12 @@ export default abstract class BaseRepository<M> {
     #TTL= Number(process.env.TTL) || 3600
     #cacheHandler: ICacheHandler
     #logHandler: Logger
-    #model: M
+    #model: string
     #databaseService: PrismaClient
     constructor(
         redis: ICacheHandler,
         logHandler: Logger,
-        model:M,
+        model:string,
         databaseService: PrismaClient
     ){
         this.#cacheHandler = redis
@@ -118,13 +118,43 @@ export default abstract class BaseRepository<M> {
         }).catch(() => {})
     }
 
-    public async create(){
+    /**
+     *  creates new row in the database
+     * 
+     * @param {Partial<M>} data - the data is takes to create a new record
+     * 
+     * @returns {Promise<M>} - the newly created record
+     * 
+     */
+    async create(data: T): Promise<M>{
         try {
-            this.#withRetry( async () => {
-                const response = await this.#databaseService[this.#model].create({data:{}})
+            return await this.#withRetry( async () => {
+                return await this.#databaseService[this.#model].create({data})
             })
+             
         } catch (error) {
-            
+            throw error
+        }
+
+    }
+
+
+    /**
+     *  creates new row in the database
+     * 
+     * @param {any} data - the data is takes to create a new record
+     * 
+     * @returns {Promise<M>} - the newly created record
+     * 
+     */
+    async findUnique(data: U): Promise<M>{
+        try {
+            return await this.#withRetry( async () => {
+                return await this.#databaseService[this.#model].findUnique(data)
+            })
+             
+        } catch (error) {
+            throw error
         }
 
     }
@@ -135,7 +165,7 @@ export default abstract class BaseRepository<M> {
     
    
 
-    public async withTransaction(cb: (tx: Prisma.TransactionClient) => Promise<any>) {
+    public async withTransaction(cb: (tx: Prisma.TransactionClient) => Promise<any>): Promise<any> {
         try {
             this.#logHandler.info(`${this.#model}/withTransaction`, JSON.stringify(cb))
             return await this.#withRetry(async() => {
@@ -170,7 +200,7 @@ export default abstract class BaseRepository<M> {
                 });
     }
     
-    public async findOneByEmail(email: string){}
+
     public async findAll(data: any){}
     public async delete(id: string, deletedBy: string, deleteReason:string ){}
     public async permanentdelete(id: string){}
