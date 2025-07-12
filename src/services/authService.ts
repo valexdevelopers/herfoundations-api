@@ -30,6 +30,7 @@ export class AuthService {
                         AuthErrorCode.EMAIL_ALREADY_EXISTS
                     )
                 }
+                data.isEmailVerified = false
                 return await this.userProvider(data)
 
             case 'google':

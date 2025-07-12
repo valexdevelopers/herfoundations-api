@@ -1,20 +1,19 @@
 import { IsEmail, IsOptional, IsString, IsIn, IsBoolean, IsNotEmpty, ValidateIf } from 'class-validator';
 
 export class CreateUserDto {
-    @ValidateIf((o) => !o.authProvider && !o.authToken)
+    @ValidateIf((o) => !o.authToken)
     @IsOptional()
     @IsEmail({}, { message: 'Invalid email format' })
     email?: string;
 
-    @ValidateIf((o) => !o.authProvider && !o.authToken)
+    @ValidateIf((o) => !o.authToken)
     @IsOptional()
     @IsString({ message: 'Password must be a string' })
     password?: string;
 
-    @ValidateIf((o) => !o.email && !o.password)
-    @IsOptional()
+    @IsNotEmpty()
     @IsIn(['self', 'google'], { message: 'authProvider must be either self or google' })
-    authProvider?: 'self' | 'google';
+    authProvider!: 'self' | 'google';
 
     @ValidateIf((o) => !o.email && !o.password)
     @IsOptional()

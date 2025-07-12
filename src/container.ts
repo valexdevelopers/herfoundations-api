@@ -9,7 +9,8 @@ import AuthRepository from "./repositories/authRepository copy 2"
 import { AuthService } from "./services/authService"
 import { AuthProviderRepository, PersonalAccessRepository } from "./repositories/authProviderRepository"
 
-const redis = new Redis('redis://:password@host:6379')
+const redisUrl = `redis://default:${encodeURIComponent(process.env.REDIS_PASS as string)}@${process.env.REDIS_HOST}:6379`
+const redis = new Redis(redisUrl)
 
 // loggers
 // repo loggers

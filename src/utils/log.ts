@@ -4,28 +4,35 @@ import { CloudWatchLogsClient, CreateLogGroupCommand, CreateLogStreamCommand, De
 export default class Logger {
     #LogGroupName: string;
     #LogName = process.env.APPNAME || "HerFoundationsApi"
-    private static client = new CloudWatchLogsClient({
-        region: process.env.AWS_REGION, // Replace with your actual region
-        credentials: {
-            accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? "",
-            secretAccessKey:process.env.AWS_SECRET_ACCESS_KEY ?? "",
-        },
-    })
-    #client = Logger.client
-    
+    static #client: CloudWatchLogsClient
+
     constructor(
-        logGroupName: string
+        logGroupName: string,
+        
     ){
         this.#LogGroupName = logGroupName
+        
     }
 
+    static #getclient() {
+        if(!this.#client){
+            this.#client = new CloudWatchLogsClient({
+                region: process.env.AWS_REGION, // Replace with your actual region
+                credentials: {
+                    accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? "",
+                    secretAccessKey:process.env.AWS_SECRET_ACCESS_KEY ?? "",
+                },
+            })  
+        }
+        return this.#client
+    }
     async #createLogGroup(logGroupName: string){
         try {
             const command = new CreateLogGroupCommand({
                 logGroupName,
                 logGroupClass:"STANDARD", // or "INFREQUENT_ACCESS"
             });
-            const logGroup = await this.#client.send(command)
+            const logGroup = await Logger.#client.send(command)
             return logGroup;
         } catch (error: any) {
              if(error.code !== 'ResourceAlreadyExistsException'){
@@ -40,7 +47,7 @@ export default class Logger {
         try {
             logGroupName = `${this.#LogName}/${process.env.NODE_ENV}/${logGroupName}`
             const command = new DescribeLogGroupsCommand({logGroupNamePrefix: logGroupName}) 
-            const existingLogGroup = await this.#client.send(command);
+            const existingLogGroup = await Logger.#client.send(command);
             if(existingLogGroup.logGroups!.length < 1){
                 const createLogGroup = await this.#createLogGroup(logGroupName);
                 logGroupName = createLogGroup.$metadata.httpStatusCode == 200 ? logGroupName : ""
@@ -60,7 +67,7 @@ export default class Logger {
                 logGroupName,
                 logStreamName
             });
-            await this.#client.send(command)
+            await Logger.#client.send(command)
             return logStreamName;
         } catch (error: any) {
             if(error.code !== 'ResourceAlreadyExistsException'){
@@ -74,7 +81,7 @@ export default class Logger {
     async #findOrCreateLogStreams(logGroupName: string, logStreamName: string){
         try {
             const command = new DescribeLogStreamsCommand({logGroupName, logStreamNamePrefix: logStreamName}) 
-            const existingLogStream = await this.#client.send(command);
+            const existingLogStream = await Logger.#client.send(command);
             if(existingLogStream.logStreams!.length < 1){
                 await this.#createLogStream(logGroupName, logStreamName);
             }
@@ -92,7 +99,7 @@ export default class Logger {
                 logGroupName,
                 logStreamNamePrefix: logStreamName,
             })
-            const sequence = await this.#client.send(command);
+            const sequence = await Logger.#client.send(command);
             return sequence
         } catch (error) {
             console.warn(`Could not get upload sequence for stream ${logStreamName} and group ${logGroupName} : ${error} `)
@@ -101,6 +108,7 @@ export default class Logger {
     }
 
     async #log(logLevel: string, logData: string, logStreamName: string) {
+        Logger.#getclient()
         try {
             const logGroupName = await this.#findOrCreateLogGroup(this.#LogGroupName)
             logStreamName = await this.#findOrCreateLogStreams(logGroupName, logStreamName)
@@ -117,7 +125,7 @@ export default class Logger {
                 ],
                 ...(uploadSequenceToken?.uploadSequenceToken && {sequenceToken: uploadSequenceToken?.uploadSequenceToken})
             })
-            await this.#client.send(command); 
+            await Logger.#client.send(command); 
             console.info(`Logs were sent to cloudwatch`)
         } catch (error) {
             console.warn(`Logs were not sent to cloudwatch`)
