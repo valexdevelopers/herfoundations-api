@@ -147,7 +147,7 @@ export default class Logger {
             
                 default:
                     console.warn(error)
-                    break;
+                    throw error
             }
         }
     }
@@ -164,7 +164,7 @@ export default class Logger {
             
                 default:
                     console.warn(error)
-                    break;
+                    throw error
             }
         }
     }
@@ -181,7 +181,7 @@ export default class Logger {
             
                 default:
                     console.warn(error)
-                    break;
+                    throw error
             }
         }
     }
@@ -199,7 +199,7 @@ export default class Logger {
             
                 default:
                     console.warn(error)
-                    break;
+                    throw error
             }
         }
     }

@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import { loadRoutes } from './routes';
-// import { errorHandler } from './middlewares/errorHandler';
+import { errorHandler } from './middlewares/errorHandler';
 // import { rateLimiter } from './middlewares/rateLimiter';
 
 dotenv.config();
@@ -20,7 +20,7 @@ app.use(express.json());
 loadRoutes(app);
 
 // Error handling
-// app.use(errorHandler);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 8000;
 
