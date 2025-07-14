@@ -8,7 +8,7 @@ import { Prisma } from "../../@prisma/client"
 import { $Enums } from "../../@prisma/client"
 import { CreateUserDto } from "../utils/dtos/user/create-user.dto";
 
-export class AuthService {
+export class AuthService<M> {
     #authReposiory: IAuthRepository
     #authProviderReposiory: IAuthProviderRepository
     constructor(authRepository: IAuthRepository, 
@@ -17,7 +17,7 @@ export class AuthService {
         this.#authProviderReposiory = authProviderReposiory
     }
 
-    public async create (data: CreateUserDto) {
+    public async create (data: CreateUserDto): Promise<M> {
         
         switch (data.authProvider) {
             case 'self':
@@ -78,7 +78,11 @@ export class AuthService {
                 
                 
             default:
-                break;
+                throw new AuthError(
+                    "Bad Data Error! sorry this is not a valid authentication method.",
+                    500,
+                    AuthErrorCode.MISING_DATA
+                )
             }
         
     }
@@ -222,7 +226,7 @@ export class AuthService {
 
 
 
-    private async userProvider (data:CreateUserDto ) {
+    private async userProvider (data:CreateUserDto ): Promise<any> {
         const SALT_ROUNDS = 10;
         const hashPassword = async (plainPassword: string): Promise<string> => {
             return await bcrypt.hash(plainPassword, SALT_ROUNDS);
@@ -230,7 +234,9 @@ export class AuthService {
         data.password = data.password ? await hashPassword(data.password) : undefined
         try {
             
-            return await this.#authReposiory.create(data)
+            const {user, personalaAccessTokens} = await this.#authReposiory.createUser(data)
+            const {password, refreshToken, ...rest} = user
+            return {...rest}
             // send notifications for verification
 
         } catch (error) {

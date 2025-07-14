@@ -128,6 +128,7 @@ export default abstract class BaseRepository<M, T, U> {
      */
     async create(data: T): Promise<M>{
         try {
+            console.log({data})
             return await this.#withRetry( async () => {
                 return await this.#databaseService[this.#model].create({data})
             })
@@ -169,10 +170,10 @@ export default abstract class BaseRepository<M, T, U> {
         try {
             this.#logHandler.info(`${this.#model}/withTransaction`, JSON.stringify(cb))
             return await this.#withRetry(async() => {
-                await this.#databaseService.$transaction(cb)
+                return await this.#databaseService.$transaction(cb, {timeout: 20000})
             })
         } catch (error) {
-            
+            throw error
         }
         
     }

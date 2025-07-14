@@ -5,7 +5,7 @@ import { IAdminRepository, IAuthProviderRepository, IAuthRepository, IDoctorRepo
 import DoctorRepository from "./repositories/doctorRepository"
 import PatientRepository from "./repositories/patientRepository"
 import AdminRepository from "./repositories/adminRepository"
-import AuthRepository from "./repositories/authRepository copy 2"
+import AuthRepository from "./repositories/authRepository"
 import { AuthService } from "./services/authService"
 import { AuthProviderRepository, PersonalAccessRepository } from "./repositories/authProviderRepository"
 

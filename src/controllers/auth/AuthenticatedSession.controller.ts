@@ -20,7 +20,8 @@ export class AuthController {
 
             }
             const result = await authService.create(createUserInput);
-            await authControllerlogger.info(JSON.stringify(req.headers), "authcontroller/register")
+            console.log({result})
+            await authControllerlogger.info("authcontroller/register", JSON.stringify(req.body))
             res.status(201).json(result);
         } catch (err) {
             next(err);

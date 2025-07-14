@@ -51,7 +51,7 @@ export default class AuthRepository extends BaseRepository<User, Prisma.UserCrea
         this.#personAccessRepository = personAccessRepository;
     }
     #clientt = new PrismaClient()
-    async createUser (data: CreateUserDto): Promise<{ user:User, personalaAccessTokens: PersonalAccessToken }> {
+    async createUser (data: CreateUserDto): Promise<{ user: User, personalaAccessTokens: PersonalAccessToken }> {
         try {
             return await this.withTransaction(async (prisma) => {
                 const newUserInput: Prisma.UserCreateInput = {
@@ -59,9 +59,10 @@ export default class AuthRepository extends BaseRepository<User, Prisma.UserCrea
                     email: data.email!,
                     password: data.password,
                     userType: data. userType  as $Enums.UserType,
-                    status: data.userType === $Enums.UserType.patient ? $Enums.UserStatus.active: $Enums.UserStatus.restricted 
+                    status: data.userType === $Enums.UserType.patient ? $Enums.UserStatus.active : $Enums.UserStatus.restricted 
                 }
                 
+                console.log({newUserInput})
                 const user = await super.create(newUserInput);
 
                 switch (user.userType) {
