@@ -6,6 +6,8 @@ import BaseRepository from "./baseRepository";
 import { AuthProvider } from "../../@prisma/client";
 import Logger from "../utils/log";
 import { ICacheHandler } from "../utils/interfaces/base.interfaces";
+import { AuthError } from "../utils/errorhandlers";
+import { AuthErrorCode } from "../utils/enums";
 
 /**
  * Repository for managing authProvider relations.
@@ -38,23 +40,38 @@ export class AuthProviderRepository extends BaseRepository<AuthProvider, Prisma.
          super(redis, superLogHandler, model, databaseService);
          this.#logHandler = logHandler;
      }
-    async connectUser (data: CreateAuthProviderDto): Promise<AuthProvider> {
-        try {
-            
-        } catch (error) {
-            
-        }
-        const authProviderInput: Prisma.AuthProviderCreateInput = {
-            user: {
-                connect: { id: data.userId },
-            },
-            provider: data.provider as $Enums.AuthenticationProviders,
-            providerUserId: data.providerUserId!,
-        };
 
-        return await this.create(authProviderInput );  
+    async connectUser (createAuthProviderDto: CreateAuthProviderDto): Promise<AuthProvider> {
+        try {
+            return await this.withTransaction(async (prisma) => {
+                const data: Prisma.AuthProviderFindUniqueArgs ={
+                    where: {
+                        userId_provider: {
+                        userId: createAuthProviderDto.userId,
+                        provider: createAuthProviderDto.provider as $Enums.AuthenticationProviders,
+                        }
+                    }                                                       
+                }
+                let existingAuthUser = await this.findUnique(data);
+                if(!existingAuthUser){
+                    const authProviderData = {
+                        user: {connect: {id: createAuthProviderDto.userId}} , 
+                        provider: createAuthProviderDto.provider as $Enums.AuthenticationProviders, 
+                        providerUserId: createAuthProviderDto.providerUserId!}
+                    existingAuthUser = await super.create(authProviderData)
+                }
+
+                return existingAuthUser
+            })
+        } catch (error) {
+            throw new AuthError(
+                "Sever error! An unexpected error occurred with third party authentication.",
+                500,
+                AuthErrorCode.AUTH_FAILED
+            ) 
+        }
     }
-  
+
     public async findOneByIdProvider(userId: string, provider: $Enums.AuthenticationProviders){
         const data: Prisma.AuthProviderFindUniqueArgs ={
             where: {
