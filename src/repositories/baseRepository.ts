@@ -2,7 +2,7 @@ import Logger from "../utils/log";
 import { ICacheHandler } from "../utils/interfaces/base.interfaces";
 import { Prisma, PrismaClient } from "@prisma/client";
 
-export default abstract class BaseRepository<M, T, U> {
+export default abstract class BaseRepository<M, T, W, U> {
 
     /** 
     * Base Repository
@@ -25,8 +25,10 @@ export default abstract class BaseRepository<M, T, U> {
     * 
     * @param cacheHandler - The cache Handler that implemets redis.
     * @param logHandler - Logger instance for output.
-    * @param model - The Prisma model delegate to operate on.
-    * 
+    * @param model<M> - The Prisma model delegate to operate on.
+    * @param T - Prisma.ModelCreateInputType
+    * @param U - Prisma.ModelUpdateInputType
+    * @param W - Prisma.UserFindUniqueArgsType
     * 
     * 
     */
@@ -148,7 +150,7 @@ export default abstract class BaseRepository<M, T, U> {
      * @returns {Promise<M>} - the newly created record
      * 
      */
-    async findUnique(data: U): Promise<M>{
+    async findUnique(data: W): Promise<M>{
         try {
             return await this.#withRetry( async () => {
                 return await this.#databaseService[this.#model].findUnique(data)
@@ -159,6 +161,21 @@ export default abstract class BaseRepository<M, T, U> {
         }
 
     }
+    
+    async update(findBy:W, data: U){
+        try {
+            return await this.#withRetry(async () => {
+                return await this.#databaseService[this.#model].update({
+                    findBy,
+                    data
+                })
+            })
+            
+        } catch (error) {
+            throw error
+        }
+    }
+
 
     public async createMany(){}
 

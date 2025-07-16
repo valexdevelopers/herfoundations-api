@@ -25,7 +25,7 @@ import { ICacheHandler } from "../utils/interfaces/base.interfaces";
  * @see UserModel
  */
 
-export default class AuthRepository extends BaseRepository<User, Prisma.UserCreateInput, Prisma.UserFindUniqueArgs>{
+export default class AuthRepository extends BaseRepository<User, Prisma.UserCreateInput, Prisma.UserFindUniqueArgs, Prisma.UserUpdateInput>{
     #logHandler: Logger
     #patientRepository: IPatientRepository
     #adminRepository: IAdminRepository

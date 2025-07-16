@@ -22,7 +22,7 @@ import { ICacheHandler } from "../utils/interfaces/base.interfaces";
  * @see DoctorModel
  */
 
-export default class DoctorRepository extends BaseRepository<Doctor, Prisma.DoctorCreateInput, Prisma.DoctorFindUniqueArgs>{
+export default class DoctorRepository extends BaseRepository<Doctor, Prisma.DoctorCreateInput, Prisma.DoctorFindUniqueArgs,  Prisma.DoctorUpdateInput>{
     #logHandler: Logger
 
     constructor(

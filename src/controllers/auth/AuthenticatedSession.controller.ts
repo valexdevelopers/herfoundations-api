@@ -26,7 +26,7 @@ export class AuthController {
         }
     }
 
-    static async login(req: Request, res: Response, next: NextFunction) {
+    static async login(req: Request, res: Response, next: NextFunction): Promise<any> {
         try {
             console.log({ req: req.body })
             const loginUserInput: LoginUserDto = {

@@ -27,7 +27,7 @@ import { AuthErrorCode } from "../utils/enums";
  * @see AuthProvider
  */
 
-export class AuthProviderRepository extends BaseRepository<AuthProvider, Prisma.AuthProviderCreateInput, Prisma.AuthProviderFindUniqueArgs>{
+export class AuthProviderRepository extends BaseRepository<AuthProvider, Prisma.AuthProviderCreateInput, Prisma.AuthProviderFindUniqueArgs, Prisma.AuthProviderUpdateInput>{
      #logHandler: Logger
  
      constructor(
@@ -162,7 +162,7 @@ export class AuthProviderRepository extends BaseRepository<AuthProvider, Prisma.
  * @see AuthProvider
  */
 
-export class PersonalAccessRepository extends BaseRepository<PersonalAccessToken, Prisma.PersonalAccessTokenCreateInput, Prisma.PersonalAccessTokenFindUniqueArgs>{
+export class PersonalAccessRepository extends BaseRepository<PersonalAccessToken, Prisma.PersonalAccessTokenCreateInput, Prisma.PersonalAccessTokenFindUniqueArgs, Prisma.PersonalAccessTokenUpdateInput>{
      #logHandler: Logger
  
      constructor(
