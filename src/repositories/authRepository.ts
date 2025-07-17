@@ -1,5 +1,5 @@
 import { PrismaClient, Prisma, $Enums, PersonalAccessToken} from "../../@prisma/client";
-import { FindManyUsers, IAdminRepository, IAuthRepository, IDoctorRepository, IPatientRepository, IPersonalAccessRepository } from "../utils/interfaces/account.interface"
+import { FindManyUsers, FindUniqueUser, IAdminRepository, IAuthRepository, IDoctorRepository, IPatientRepository, IPersonalAccessRepository } from "../utils/interfaces/account.interface"
 import { AuthError } from "../utils/errorhandlers"
 import { AuthErrorCode } from "../utils/enums"
 import { CreateUserDto } from "../utils/dtos/user/create-user.dto"
@@ -7,6 +7,7 @@ import BaseRepository from "./baseRepository";
 import { User } from "../../@prisma/client";
 import Logger from "../utils/log";
 import { ICacheHandler } from "../utils/interfaces/base.interfaces";
+import { UpdateUserDto } from "../utils/dtos/user/update-user.dto";
 /**
  * Repository for managing account relations.
  *
@@ -219,7 +220,7 @@ export default class AuthRepository extends BaseRepository<User, Prisma.UserCrea
             return await this.findUnique(data);
         } catch (error) {
             this.#logHandler.error("AuthRepository/FindOneByEmail", JSON.stringify(`Could not find one by email using: ${email}. ${error}`))
-            throw new Error("U")
+            throw error
         } 
     }
 
@@ -232,9 +233,19 @@ export default class AuthRepository extends BaseRepository<User, Prisma.UserCrea
         // deleted
     }
 
-    // public async update(id: string, updateDate: ){
+    async updateUser(findBy: FindUniqueUser, updateData: UpdateUserDto ){
+        try {
+            
+            const findUniqueBy: Prisma.UserFindUniqueArgs = {where: {...findBy}}
+            const updateUserInput: Prisma.UserUpdateInput = {...updateData}
+            this.#logHandler.info("AuthRepository/updateUser", JSON.stringify({findUniqueBy, updateUserInput}))
+            return await this.update(findUniqueBy, updateUserInput);
 
-    // }
+        } catch (error) {
+            this.#logHandler.error("AuthRepository/updateUser", JSON.stringify(`Could not update user ${findBy} with data: ${updateData}`))
+            throw error
+        } 
+    }
 
     // public async delete(id: string, deletedBy: string, deleteReason:string ){
     //     const user = await this.#clientt['user'].update({

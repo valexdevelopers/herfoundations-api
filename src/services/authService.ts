@@ -8,6 +8,7 @@ import { Prisma } from "../../@prisma/client"
 import { $Enums } from "../../@prisma/client"
 import { CreateAuthProviderDto, CreateUserDto } from "../utils/dtos/user/create-user.dto";
 import { LoginUserDto } from "../utils/dtos/user/login-user.dto";
+import { UpdateUserDto } from "../utils/dtos/user/update-user.dto";
 
 export class AuthService<M> {
     #authReposiory: IAuthRepository
@@ -173,9 +174,15 @@ export class AuthService<M> {
     //     // deleted
     // }
 
-    // // public async update(id: string, updateDate: ){
+    public async update(id: string, updateDate: UpdateUserDto ){
+        const gender = "female"
+        try {
+             await this.#authReposiory.updateUser({id: id}, {gender})
+        } catch (error) {
+            throw error
+        }
 
-    // // }
+    }
 
     // public async delete(id: string, deletedBy: string, deleteReason:string ){
     //     const user = await this.databaseService.user.update({
@@ -270,7 +277,8 @@ export class AuthService<M> {
             const refreshToken = jwt.sign({id:user.id}, JWT_REFRESH_SECRET as string, {expiresIn: JWT_REFRESH_EXPIRES_IN as jwt.SignOptions['expiresIn']})
 
             // update user with refreshtoken
-            await this.databaseService.user.update({data: {refreshToken}, where: {id: user.id as string}} )
+            const lastLoginAt = new Date
+            await this.#authReposiory.updateUser({id:user.id!}, {refreshToken, lastLoginAt})
             return {
                 user,
                 refreshToken,

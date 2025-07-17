@@ -1,5 +1,5 @@
-import { IsEmail, IsOptional, IsString, IsIn, IsBoolean, IsNotEmpty, ValidateIf } from 'class-validator';
-
+import { IsEmail, IsOptional, IsString, IsIn, IsBoolean, IsNotEmpty, ValidateIf, IsEnum } from 'class-validator';
+import { $Enums } from '../../../../@prisma/client';
 export class CreateUserDto {
     @ValidateIf((o) => !o.authToken)
     @IsOptional()
@@ -20,8 +20,8 @@ export class CreateUserDto {
     @IsString({ message: 'authToken must be a string' })
     authToken?: string;
 
-    @IsString({ message: 'userType is required and must be a string' })
-    userType!: string;
+    @IsEnum($Enums.UserType, { message: 'userType is required and must be a string' })
+    userType!: $Enums.UserType;
 
     @IsOptional()
     @IsString({ message: 'providerUserId must be a string' })

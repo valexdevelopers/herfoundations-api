@@ -1,10 +1,21 @@
 import { $Enums, Admin, AuthProvider, Doctor, Patient, PersonalAccessToken, Prisma } from "../../../@prisma/client";
 import { UserStatus } from "../../../@prisma/client";
+import { UpdateUserDto } from "../dtos/user/update-user.dto";
 import { UserType } from "../enums";
+
+export type AtLeastOne<T, K extends keyof T = keyof T> =
+  K extends keyof T
+    ? Required<Pick<T, K>> & Partial<Omit<T, K>>
+    : never;
+
+export type FindUniqueUser = AtLeastOne<{
+  email: string;
+  id: string;
+}>;
 
 export interface IAuthRepository {
     createUser(data:any): Promise<any>
-    // login(data:any): Promise<any>
+    updateUser(findBy: FindUniqueUser, data: UpdateUserDto): Promise<any>
     findOneByEmail(email:string): Promise<any>
 }
 
