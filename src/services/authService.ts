@@ -175,13 +175,13 @@ export class AuthService<M> {
     // }
 
     public async update(id: string, updateDate: UpdateUserDto ){
-        const gender = "female"
         try {
-             await this.#authReposiory.updateUser({id: id}, {gender})
+            const user = await this.#authReposiory.updateUser({id: id}, {...updateDate})
+            const {password, ...rest} = user
+            return{...rest}
         } catch (error) {
             throw error
         }
-
     }
 
     // public async delete(id: string, deletedBy: string, deleteReason:string ){
@@ -273,14 +273,17 @@ export class AuthService<M> {
                         email: user.email, 
                         gender: user.gender, 
                         userType: user.userType
-                    }, JWT_ACCESS_SECRET as string, {expiresIn: JWT_ACCESS_EXPIRES_IN as jwt.SignOptions['expiresIn']})
+                        }, 
+                        JWT_ACCESS_SECRET as string, 
+                        {expiresIn: JWT_ACCESS_EXPIRES_IN as jwt.SignOptions['expiresIn']})
             const refreshToken = jwt.sign({id:user.id}, JWT_REFRESH_SECRET as string, {expiresIn: JWT_REFRESH_EXPIRES_IN as jwt.SignOptions['expiresIn']})
 
             // update user with refreshtoken
             const lastLoginAt = new Date
             await this.#authReposiory.updateUser({id:user.id!}, {refreshToken, lastLoginAt})
+            const {password, ...rest} = user
             return {
-                user,
+                ...rest,
                 refreshToken,
                 accesstoken
             }  
@@ -294,6 +297,4 @@ export class AuthService<M> {
         
     }
 }
-
-// export const authService = new AuthService(authrepository)
 

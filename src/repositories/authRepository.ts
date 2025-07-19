@@ -62,8 +62,6 @@ export default class AuthRepository extends BaseRepository<User, Prisma.UserCrea
                     userType: data. userType  as $Enums.UserType,
                     status: data.userType === $Enums.UserType.patient ? $Enums.UserStatus.active : $Enums.UserStatus.restricted 
                 }
-                
-                console.log({newUserInput})
                 const user = await super.create(newUserInput);
 
                 switch (user.userType) {

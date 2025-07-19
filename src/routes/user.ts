@@ -2,8 +2,6 @@ import { Router } from 'express';
 import { AuthController } from '../controllers/auth/AuthenticatedSession.controller';
 
 const router = Router();
-router.post('/login', AuthController.login);
-router.post('/register', AuthController.register);
-router.patch('/register', AuthController.register);
+router.patch('/:id', AuthController.update);
 
 export default router;

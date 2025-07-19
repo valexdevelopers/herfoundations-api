@@ -166,7 +166,7 @@ export default abstract class BaseRepository<M, T, W, U> {
         try {
             return await this.#withRetry(async () => {
                 return await this.#databaseService[this.#model].update({
-                    findBy,
+                    ...findBy,
                     data
                 })
             })
