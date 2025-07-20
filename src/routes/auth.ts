@@ -4,6 +4,6 @@ import { AuthController } from '../controllers/auth/AuthenticatedSession.control
 const router = Router();
 router.post('/login', AuthController.login);
 router.post('/register', AuthController.register);
-router.patch('/register', AuthController.register);
+router.post('/refresh', AuthController.refresh);
 
 export default router;

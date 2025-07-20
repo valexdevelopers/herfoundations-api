@@ -13,6 +13,11 @@ import { UpdateUserDto } from "../utils/dtos/user/update-user.dto";
 export class AuthService<M> {
     #authReposiory: IAuthRepository
     #authProviderReposiory: IAuthProviderRepository
+    #JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET 
+    #JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET
+    #JWT_ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || '1h'
+    #JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d'
+
     constructor(authRepository: IAuthRepository, 
         authProviderReposiory: IAuthProviderRepository){
         this.#authReposiory = authRepository,
@@ -144,6 +149,21 @@ export class AuthService<M> {
 
     }
 
+    public async refresh (refreshToken: string){
+        try {
+            const verifiedUser = jwt.verify(refreshToken, this.#JWT_REFRESH_SECRET as jwt.Secret)
+            const {id, ...rest} = verifiedUser as jwt.JwtPayload
+            const user = await this.#authReposiory.findOneById(id)
+            return await this.jwtSign(user)
+        } catch (error) {
+            throw new AuthError(
+                "Refresh token is invalid or expired+.",
+                401,
+                AuthErrorCode.TOKEN_INVALID
+            )
+        }
+    }
+
     // public async findOneById(id: string){
     //     const user = await this.databaseService.user.findUnique({
     //         where: {
@@ -261,12 +281,10 @@ export class AuthService<M> {
         }
     }
 
+    
     private async jwtSign (user:Prisma.UserMinAggregateOutputType ){
-        const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET 
-        const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET
-        const JWT_ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || '1h'
-        const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d'
-
+        
+        
         try {
             const accesstoken = jwt.sign({
                         id:user.id, 
@@ -274,9 +292,9 @@ export class AuthService<M> {
                         gender: user.gender, 
                         userType: user.userType
                         }, 
-                        JWT_ACCESS_SECRET as string, 
-                        {expiresIn: JWT_ACCESS_EXPIRES_IN as jwt.SignOptions['expiresIn']})
-            const refreshToken = jwt.sign({id:user.id}, JWT_REFRESH_SECRET as string, {expiresIn: JWT_REFRESH_EXPIRES_IN as jwt.SignOptions['expiresIn']})
+                        this.#JWT_ACCESS_SECRET as string, 
+                        {expiresIn: this.#JWT_ACCESS_EXPIRES_IN as jwt.SignOptions['expiresIn']})
+            const refreshToken = jwt.sign({id:user.id}, this.#JWT_REFRESH_SECRET as string, {expiresIn: this.#JWT_REFRESH_EXPIRES_IN as jwt.SignOptions['expiresIn']})
 
             // update user with refreshtoken
             const lastLoginAt = new Date

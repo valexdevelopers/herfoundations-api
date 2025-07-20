@@ -57,6 +57,42 @@ export class AuthController {
         }
     }
 
+    static async refresh(req: Request, res: Response, next: NextFunction): Promise<any> {
+        try {
+            const refreshToken = req.cookies.refreshToken;
+           if (!refreshToken) {
+                return res.status(401).json({ message: "No refresh token found" });
+            }
+
+            const ua = req.headers['user-agent'] || "";
+            const agent =  ua.includes("Mozilla") || ua.includes("Chrome") || ua.includes("Safari") || ua.includes("PostmanRuntime"); 
+            
+            const result = await authService.refresh(refreshToken);
+            res.cookie("refreshToken", result.refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                path: "/api/v1/auth/refresh",
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+            });
+            res.status(200).json(
+                {
+                ...result,
+                refreshToken: agent ? undefined :result.refreshToken
+            });
+            
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async verify(id: string, token: string){
+
+    }
+
+    static async resendVerificatioCode (id: string, token: string){
+        
+    }
 
     static async update(req: Request, res: Response, next: NextFunction): Promise<any> {
         try {

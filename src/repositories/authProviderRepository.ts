@@ -185,6 +185,15 @@ export class PersonalAccessRepository extends BaseRepository<PersonalAccessToken
         }
 
     }
+
+    async findOneByUnique (data: Prisma.PersonalAccessTokenFindUniqueArgs): Promise<PersonalAccessToken> {
+        try {
+            return await super.findUnique(data);  
+        } catch (error) {
+            this.#logHandler.alarm("PatientRepository/findOneByUnique", JSON.stringify(`failed to find findOneByUnique for a user at ${Date.now()} data: ${data}`))
+            throw new Error("Could not create fpersonal Access token ")
+        }
+    }
   
     // public async findOneByIdProvider(userId: string, provider: $Enums.AuthenticationProviders){
     //     const data: Prisma.AuthProviderFindUniqueArgs ={

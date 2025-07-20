@@ -11,12 +11,14 @@ export type AtLeastOne<T, K extends keyof T = keyof T> =
 export type FindUniqueUser = AtLeastOne<{
   email: string;
   id: string;
+  refreshToken: string;
 }>;
 
 export interface IAuthRepository {
     createUser(data:any): Promise<any>
     updateUser(findBy: FindUniqueUser, data: UpdateUserDto): Promise<any>
     findOneByEmail(email:string): Promise<any>
+    findOneById(id: string): Promise<any>
 }
 
 export interface IAuthProviderRepository {

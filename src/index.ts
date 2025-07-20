@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import helmet from 'helmet';
 import { loadRoutes } from './routes';
 import { errorHandler } from './middlewares/errorHandler';
+import cookieParser from "cookie-parser";
 // import { rateLimiter } from './middlewares/rateLimiter';
 
 dotenv.config();
@@ -11,6 +12,7 @@ dotenv.config();
 const app = express();
 
 // Middlewares
+app.use(cookieParser());
 app.use(cors());
 app.use(helmet());
 app.use(express.json());
