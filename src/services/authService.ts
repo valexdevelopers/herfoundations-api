@@ -164,6 +164,20 @@ export class AuthService<M> {
         }
     }
 
+    public async verify(id: string, token: string){
+        try {
+            const personalAcceessToken = await this.#authReposiory.verifyUser(id, token)
+            console.log({personalAcceessToken})           
+            return await {}
+        } catch (error) {
+            throw new AuthError(
+                "Invalid verification token! Kindly request a new token.",
+                401,
+                AuthErrorCode.TOKEN_INVALID
+            )
+        }
+    }
+
     // public async findOneById(id: string){
     //     const user = await this.databaseService.user.findUnique({
     //         where: {

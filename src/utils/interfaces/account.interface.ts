@@ -19,6 +19,7 @@ export interface IAuthRepository {
     updateUser(findBy: FindUniqueUser, data: UpdateUserDto): Promise<any>
     findOneByEmail(email:string): Promise<any>
     findOneById(id: string): Promise<any>
+    verifyUser(id: string, token: string): Promise<any>
 }
 
 export interface IAuthProviderRepository {
@@ -45,7 +46,7 @@ export interface IDoctorRepository {
 
 export interface IPersonalAccessRepository {
     create(data: Prisma.PersonalAccessTokenCreateInput): Promise<PersonalAccessToken>
-    
+    findOneByUnique (data: Prisma.PersonalAccessTokenFindUniqueArgs): Promise<PersonalAccessToken> 
 }
 
 export interface FindManyUsers{

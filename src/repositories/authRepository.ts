@@ -167,6 +167,33 @@ export default class AuthRepository extends BaseRepository<User, Prisma.UserCrea
         } 
     }
 
+    async verifyUser(id: string, token: string){
+        try {
+            const findUniqueBy: Prisma.PersonalAccessTokenFindUniqueArgs = {
+                select: {
+                  token: true,
+                  userId: true,
+                  expiry: true,
+                  createdAt: true,
+                  updatedAt: true
+                },
+                where: {
+                    userId_type_token:{
+                        userId: id,
+                        token: token,
+                        type: $Enums.TokenType.verifyEmail 
+                    }
+                }
+            }
+            this.#logHandler.info("AuthRepository/verifyUser", JSON.stringify({findUniqueBy}))
+            return await this.#personAccessRepository.findOneByUnique(findUniqueBy);
+
+        } catch (error) {
+            this.#logHandler.error("AuthRepository/verifyUser", JSON.stringify(`Could not find user, token and type with id: ${id} and ${token}`))
+            throw error
+        } 
+    }
+
     // public async delete(id: string, deletedBy: string, deleteReason:string ){
     //     const user = await this.#clientt['user'].update({
     //         data: {
