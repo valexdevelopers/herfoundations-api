@@ -96,7 +96,7 @@ export default class AuthRepository extends BaseRepository<User, Prisma.UserCrea
                 const hexCode = Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, "0");
                 const expiry = new Date();
                 expiry.setHours(expiry.getHours() + 3);
-                
+                console.log({hexCode})
                 const personalAccess: Prisma.PersonalAccessTokenCreateInput = {
                     user: { connect: { id: user.id } },
                     token: hexCode,

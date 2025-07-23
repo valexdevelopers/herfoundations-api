@@ -1,8 +1,12 @@
-import { IsDate, IsDateString, IsEnum, IsOptional, IsString, IsUUID } from "class-validator";
+import { IsBoolean, IsDate, IsDateString, IsEnum, IsOptional, IsString, IsUUID } from "class-validator";
 import { Type } from "class-transformer";
 import { $Enums } from "../../../../@prisma/client";
 
 export class UpdateUserDto {
+  @IsOptional()
+  @IsBoolean()
+  isEmailVerified?: boolean;
+
 
   @IsOptional()
   @IsString()

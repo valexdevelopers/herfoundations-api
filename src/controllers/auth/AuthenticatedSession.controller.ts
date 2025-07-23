@@ -4,6 +4,7 @@ import { authControllerlogger } from '../../container';
 import { CreateUserDto } from '../../utils/dtos/user/create-user.dto';
 import { LoginUserDto } from '../../utils/dtos/user/login-user.dto';
 import { UpdateUserDto } from '../../utils/dtos/user/update-user.dto';
+import { AuthError } from '../../utils/errorhandlers';
 
 export class AuthController {
 
@@ -86,8 +87,21 @@ export class AuthController {
         }
     }
 
-    static async verify(id: string, token: string){
-
+    static async verifyEmail(req: Request, res: Response, next: NextFunction){
+        try {
+           
+            const result = await authService.verify(req.body.id, req.body.token);
+            res.status(200).json({result})
+           
+            
+        } catch (error: any) {
+            if (error instanceof AuthError) {
+                res.status(error.statusCode).json({error})
+            }else{
+                next(error)
+            }
+        }
+        
     }
 
     static async resendVerificatioCode (id: string, token: string){

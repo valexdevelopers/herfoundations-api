@@ -165,17 +165,25 @@ export class AuthService<M> {
     }
 
     public async verify(id: string, token: string){
-        try {
-            const personalAcceessToken = await this.#authReposiory.verifyUser(id, token)
-            console.log({personalAcceessToken})           
-            return await {}
-        } catch (error) {
+        const personalAcceessToken = await this.#authReposiory.verifyUser(id, token)
+        if(!personalAcceessToken){
             throw new AuthError(
                 "Invalid verification token! Kindly request a new token.",
                 401,
                 AuthErrorCode.TOKEN_INVALID
             )
         }
+
+        const expiry = new Date(personalAcceessToken.expiry)
+        const now = new Date()
+        if(expiry < now){
+           throw new AuthError(
+                "eXPIRED verification token! Kindly request a new token.",
+                401,
+                AuthErrorCode.TOKEN_EXPIRED
+            ) 
+        }
+        return await this.#authReposiory.updateUser({id}, {isEmailVerified: true})
     }
 
     // public async findOneById(id: string){

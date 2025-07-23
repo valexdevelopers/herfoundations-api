@@ -21,7 +21,7 @@ import { ICacheHandler } from "../utils/interfaces/base.interfaces";
  * @see AdminModel
  */
 
-export default class AdminRepository extends BaseRepository<Admin, Prisma.AdminCreateInput, Prisma.AdminFindUniqueArgs>{
+export default class AdminRepository extends BaseRepository<Admin, Prisma.AdminCreateInput, Prisma.AdminFindUniqueArgs, Prisma.AdminUpdateInput>{
     #logHandler: Logger
     constructor(
         redis: ICacheHandler,
