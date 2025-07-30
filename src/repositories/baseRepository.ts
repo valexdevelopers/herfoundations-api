@@ -1,8 +1,10 @@
 import Logger from "../utils/log";
 import { ICacheHandler } from "../utils/interfaces/base.interfaces";
 import { Prisma, PrismaClient } from "@prisma/client";
+import { DatabaseError } from "../utils/errorhandlers";
+import { ErrorCodes } from "../utils/enums";
 
-export default abstract class BaseRepository<M, T, W, U> {
+export default abstract class BaseRepository<M, T, W, U, S> {
 
     /** 
     * Base Repository
@@ -58,7 +60,6 @@ export default abstract class BaseRepository<M, T, W, U> {
             return await fn()
         }catch(error: any){
             if(attempts >= this.#MAX_ATTEMPTS || !this.#isTransientError(error)){
-                console.error(error)
                 throw error
             }
 
@@ -130,24 +131,21 @@ export default abstract class BaseRepository<M, T, W, U> {
      */
     async create(data: T): Promise<M>{
         try {
-            console.log({data})
             return await this.#withRetry( async () => {
                 return await this.#databaseService[this.#model].create({data})
-            })
-             
-        } catch (error) {
-            throw error
+            })  
+        } catch (error: any) {
+            throw new DatabaseError(`Could not create data with the provided parameters`, 500, ErrorCodes.INTERNAL_ERROR, error)
         }
-
     }
 
 
     /**
-     *  creates new row in the database
+     *  finds a single record using unique parameters
      * 
-     * @param {any} data - the data is takes to create a new record
+     * @param {any} data - the data is takes to find a single unique record
      * 
-     * @returns {Promise<M>} - the newly created record
+     * @returns {Promise<M>} - the found created record or null
      * 
      */
     async findUnique(data: W): Promise<M>{
@@ -155,11 +153,9 @@ export default abstract class BaseRepository<M, T, W, U> {
             return await this.#withRetry( async () => {
                 return await this.#databaseService[this.#model].findUnique(data)
             })
-             
-        } catch (error) {
-            throw error
+        } catch (error: any) {
+            throw new DatabaseError(`Could not find unique data with the provided parameters`,  500, ErrorCodes.INTERNAL_ERROR, error)
         }
-
     }
     
     async update(findBy:W, data: U){
@@ -171,15 +167,28 @@ export default abstract class BaseRepository<M, T, W, U> {
                 })
             })
             
-        } catch (error) {
-            throw error
+        } catch (error: any) {
+             throw new DatabaseError(`Could not update data with the provided parameters`, 500, ErrorCodes.INTERNAL_ERROR, error)
+
         }
     }
 
 
     public async createMany(){}
 
-    public async upsert(){}
+    public async upsert(data: S): Promise<M>{
+        try {
+            return await this.#withRetry(async () => {
+                return await this.#databaseService[this.#model].upsert({
+                    ...data
+                })
+            })
+            
+        } catch (error: any) {
+             throw new DatabaseError(`Could not upsert data with the provided parameters`, 500, ErrorCodes.INTERNAL_ERROR, error)
+
+        }
+    }
     
    
 
@@ -189,8 +198,9 @@ export default abstract class BaseRepository<M, T, W, U> {
             return await this.#withRetry(async() => {
                 return await this.#databaseService.$transaction(cb, {timeout: 20000})
             })
-        } catch (error) {
-            throw error
+        } catch (error: any) {
+            throw new DatabaseError(`Server error, transaction error and rollback initiated`, 500, ErrorCodes.INTERNAL_ERROR, error)
+
         }
         
     }

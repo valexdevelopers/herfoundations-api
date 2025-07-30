@@ -95,13 +95,9 @@ export class AuthController {
            
             
         } catch (error: any) {
-            if (error instanceof AuthError) {
-                res.status(error.statusCode).json({error})
-            }else{
-                next(error)
-            }
+            next(error)
+            
         }
-        
     }
 
     static async resendVerificatioCode (id: string, token: string){

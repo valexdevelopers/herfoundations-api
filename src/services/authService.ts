@@ -1,14 +1,14 @@
 import { IAuthProviderRepository, IAuthRepository } from "../utils/interfaces/account.interface"
-import { AuthErrorCode } from "../utils/enums"
-import { AuthError } from "../utils/errorhandlers"
+import { ErrorCodes } from "../utils/enums"
+import { AuthError, ValidationsError } from "../utils/errorhandlers"
 import bcrypt from 'bcrypt';
 import jwt from "jsonwebtoken"
-import { OAuth2Client } from "google-auth-library"
 import { Prisma } from "../../@prisma/client"
 import { $Enums } from "../../@prisma/client"
-import { CreateAuthProviderDto, CreateUserDto } from "../utils/dtos/user/create-user.dto";
+import { CreateUserDto } from "../utils/dtos/user/create-user.dto";
 import { LoginUserDto } from "../utils/dtos/user/login-user.dto";
 import { UpdateUserDto } from "../utils/dtos/user/update-user.dto";
+import { ValidationError } from "class-validator";
 
 export class AuthService<M> {
     #authReposiory: IAuthRepository
@@ -34,7 +34,7 @@ export class AuthService<M> {
                     throw new AuthError(
                         "We have an existing user with this email, kindly login to your account.",
                         409,
-                        AuthErrorCode.EMAIL_ALREADY_EXISTS
+                        ErrorCodes.EMAIL_ALREADY_EXISTS
                     )
                 }
                 data.isEmailVerified = false
@@ -44,8 +44,8 @@ export class AuthService<M> {
                 if(!data.authToken) {
                         throw new AuthError(
                         "Auth token cant be empty when using google to register.",
-                        400,
-                        AuthErrorCode.MISING_DATA
+                        403,
+                        ErrorCodes.MISING_DATA
                     )
                 }
 
@@ -54,7 +54,7 @@ export class AuthService<M> {
                         throw new AuthError(
                         "Google could not verify your account",
                         401,
-                        AuthErrorCode.GOOGLE_AUTH_FAILED
+                        ErrorCodes.GOOGLE_AUTH_FAILED
                     )
                 }
 
@@ -78,8 +78,8 @@ export class AuthService<M> {
             default:
                 throw new AuthError(
                     "Bad Data Error! sorry this is not a valid authentication method.",
-                    500,
-                    AuthErrorCode.MISING_DATA
+                    403,
+                    ErrorCodes.MISING_DATA
                 )
             }
         
@@ -93,15 +93,15 @@ export class AuthService<M> {
                    throw new AuthError(
                         "We couldn't find an existing user account with this email.",
                         404,
-                        AuthErrorCode.USER_NOT_FOUND
+                        ErrorCodes.USER_NOT_FOUND
                     ) 
                 }
                 const isPasswordCorrect = await bcrypt.compare(data.password!, user.password!)
                 if(!isPasswordCorrect){
                     throw new AuthError(
-                        "Authentication error. invalid credentials provided",
-                        404,
-                        AuthErrorCode.AUTH_FAILED
+                        "Invalid credentials provided. Either email or password is incorrect",
+                        401,
+                        ErrorCodes.AUTH_FAILED
                     ) 
                 }
                 return await this.jwtSign(user)
@@ -112,7 +112,7 @@ export class AuthService<M> {
                      throw new AuthError(
                         "Google could not verify your account",
                         401,
-                        AuthErrorCode.GOOGLE_AUTH_FAILED
+                        ErrorCodes.GOOGLE_AUTH_FAILED
                     )
                 }
                 user = await this.#authReposiory.findOneByEmail(googleUser.email!)
@@ -120,7 +120,7 @@ export class AuthService<M> {
                    throw new AuthError(
                         "We couldn't find an existing user account with this email, kindle register an account.",
                         404,
-                        AuthErrorCode.USER_NOT_FOUND
+                        ErrorCodes.USER_NOT_FOUND
                     ) 
                 }
                 this.checkAccount(user)
@@ -134,7 +134,7 @@ export class AuthService<M> {
                     throw new AuthError(
                         "Sever error! sorry we could not log you in due to some unexpected error. Kindly try again.",
                         500,
-                        AuthErrorCode.INTERNAL_ERROR
+                        ErrorCodes.INTERNAL_ERROR
                     ) 
                 }
                 return await this.jwtSign(user)
@@ -142,7 +142,7 @@ export class AuthService<M> {
                 throw new AuthError(
                     "Unknowns authentication route detected. All associated accounts would be penalised",
                     404,
-                    AuthErrorCode.MISING_DATA
+                    ErrorCodes.MISING_DATA
                 ) 
                 
         }
@@ -159,7 +159,7 @@ export class AuthService<M> {
             throw new AuthError(
                 "Refresh token is invalid or expired+.",
                 401,
-                AuthErrorCode.TOKEN_INVALID
+                ErrorCodes.TOKEN_INVALID
             )
         }
     }
@@ -167,20 +167,20 @@ export class AuthService<M> {
     public async verify(id: string, token: string){
         const personalAcceessToken = await this.#authReposiory.verifyUser(id, token)
         if(!personalAcceessToken){
-            throw new AuthError(
+            throw new ValidationsError(
                 "Invalid verification token! Kindly request a new token.",
                 401,
-                AuthErrorCode.TOKEN_INVALID
+                ErrorCodes.TOKEN_INVALID
             )
         }
 
         const expiry = new Date(personalAcceessToken.expiry)
         const now = new Date()
         if(expiry < now){
-           throw new AuthError(
-                "eXPIRED verification token! Kindly request a new token.",
+           throw new ValidationsError(
+                "Expired verification token! Kindly request a new token.",
                 401,
-                AuthErrorCode.TOKEN_EXPIRED
+                ErrorCodes.TOKEN_EXPIRED
             ) 
         }
         return await this.#authReposiory.updateUser({id}, {isEmailVerified: true})
@@ -275,7 +275,7 @@ export class AuthService<M> {
             throw new AuthError(
                 'An unexpected error occurred while creating your account. Please try again later.',
                 500,
-                AuthErrorCode.INTERNAL_ERROR
+                ErrorCodes.INTERNAL_ERROR
             )
         }
         
@@ -286,26 +286,25 @@ export class AuthService<M> {
             throw new AuthError(
                 "We have no exisitng user account  with this email, kindly register to get started.",
                 401,
-                AuthErrorCode.USER_NOT_FOUND
+                ErrorCodes.USER_NOT_FOUND
             )
         }else if(user.status === $Enums.UserStatus.deleted){
             throw new AuthError(
                 "This account does not exist",
                 401,
-                AuthErrorCode.ACCOUNT_RESTRICTED
+                ErrorCodes.ACCOUNT_RESTRICTED
             )
         }else if(user.status !== $Enums.UserStatus.active){
             throw new AuthError(
                 "This account is restricted possibly from abuse or account deactivation. Contact administrators",
                 401,
-                AuthErrorCode.ACCOUNT_RESTRICTED
+                ErrorCodes.ACCOUNT_RESTRICTED
             )
         }
     }
 
     
     private async jwtSign (user:Prisma.UserMinAggregateOutputType ){
-        
         
         try {
             const accesstoken = jwt.sign({
@@ -328,10 +327,13 @@ export class AuthService<M> {
                 accesstoken
             }  
         } catch (error) {
+            if (error instanceof AuthError) {
+                throw error
+            }
             throw new AuthError(
                 'An unexpected json error occurred. Please try again later.',
                 500,
-                AuthErrorCode.INTERNAL_ERROR
+                ErrorCodes.INTERNAL_ERROR
             )
         }
         

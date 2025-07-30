@@ -47,6 +47,7 @@ export interface IDoctorRepository {
 export interface IPersonalAccessRepository {
     create(data: Prisma.PersonalAccessTokenCreateInput): Promise<PersonalAccessToken>
     findOneByUnique (data: Prisma.PersonalAccessTokenFindUniqueArgs): Promise<PersonalAccessToken> 
+    upsert(data: Prisma.PersonalAccessTokenUpsertArgs): Promise<PersonalAccessToken>
 }
 
 export interface FindManyUsers{

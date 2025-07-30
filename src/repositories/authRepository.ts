@@ -1,7 +1,7 @@
 import { PrismaClient, Prisma, $Enums, PersonalAccessToken} from "../../@prisma/client";
 import { FindManyUsers, FindUniqueUser, IAdminRepository, IAuthRepository, IDoctorRepository, IPatientRepository, IPersonalAccessRepository } from "../utils/interfaces/account.interface"
 import { AuthError } from "../utils/errorhandlers"
-import { AuthErrorCode } from "../utils/enums"
+import { ErrorCodes } from "../utils/enums"
 import { CreateUserDto } from "../utils/dtos/user/create-user.dto"
 import BaseRepository from "./baseRepository";
 import { User } from "../../@prisma/client";
@@ -26,7 +26,7 @@ import { UpdateUserDto } from "../utils/dtos/user/update-user.dto";
  * @see UserModel
  */
 
-export default class AuthRepository extends BaseRepository<User, Prisma.UserCreateInput, Prisma.UserFindUniqueArgs, Prisma.UserUpdateInput>{
+export default class AuthRepository extends BaseRepository<User, Prisma.UserCreateInput, Prisma.UserFindUniqueArgs, Prisma.UserUpdateInput, Prisma.UserUpsertArgs>{
     #logHandler: Logger
     #patientRepository: IPatientRepository
     #adminRepository: IAdminRepository
@@ -88,7 +88,7 @@ export default class AuthRepository extends BaseRepository<User, Prisma.UserCrea
                         throw new AuthError(
                             "Invalid user type provided.",
                             403,
-                            AuthErrorCode.MISING_DATA
+                            ErrorCodes.MISING_DATA
                         )
                 }
 
@@ -96,25 +96,21 @@ export default class AuthRepository extends BaseRepository<User, Prisma.UserCrea
                 const hexCode = Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, "0");
                 const expiry = new Date();
                 expiry.setHours(expiry.getHours() + 3);
-                console.log({hexCode})
                 const personalAccess: Prisma.PersonalAccessTokenCreateInput = {
                     user: { connect: { id: user.id } },
                     token: hexCode,
                     type: $Enums.TokenType.verifyEmail,
                     expiry: expiry,
                 }
+
                 const personalaAccessTokens = await this.#personAccessRepository.create(personalAccess);
 
                 return { user, personalaAccessTokens }; // Return created user
-            });
-            
-            
+            }); 
         } catch (error) {
-            this.#logHandler.alarm("AuthRepository/createUser", JSON.stringify(`failed to create user at ${Date.now()} data: ${data}`))
-            throw new Error("Could not create user")
-        }
-        
-        
+            this.#logHandler.alarm("AuthRepository/createUser", JSON.stringify(`failed to create user at ${Date.now()} data: ${data} due to ${error}`))
+            throw error
+        }    
     }
 
     public async findOneById(id: string){
@@ -192,6 +188,52 @@ export default class AuthRepository extends BaseRepository<User, Prisma.UserCrea
             this.#logHandler.error("AuthRepository/verifyUser", JSON.stringify(`Could not find user, token and type with id: ${id} and ${token}`))
             throw error
         } 
+    }
+
+
+    async upsertVerificationToken (userId: string): Promise<{ user: User, personalaAccessTokens: PersonalAccessToken }> {
+        try {
+            return await this.withTransaction(async (prisma) => {
+                // create personal access token for user account verification
+                const hexCode = Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, "0");
+                const expiry = new Date();
+                expiry.setHours(expiry.getHours() + 3);
+                console.log({hexCode})
+                const personalAccess: Prisma.PersonalAccessTokenUpsertArgs = {
+                    select: {
+                        user: true,
+                        token: true,
+                        type: true,
+                        expiry: true,
+                        createdAt: true
+                    },
+                    where: {
+                        userId_type:{
+                            userId,
+                            type: $Enums.TokenType.verifyEmail
+                        }
+                    },
+                    create: {
+                        user: { connect: { id: userId } },
+                        token: hexCode,
+                        type: $Enums.TokenType.verifyEmail,
+                        expiry: expiry,
+                    },
+                    update: {
+                        token: hexCode,
+                        expiry: expiry,
+                    }
+                    
+                }
+
+                const personalaAccessTokens = await this.#personAccessRepository.upsert(personalAccess);
+
+                return { ...personalaAccessTokens }; // Return created user
+            }); 
+        } catch (error) {
+            this.#logHandler.alarm("AuthRepository/upsertVerificationToken", JSON.stringify(`failed to upsert user verification token  at ${Date.now()} data: ${userId} due to ${error}`))
+            throw error
+        }    
     }
 
     // public async delete(id: string, deletedBy: string, deleteReason:string ){
@@ -298,7 +340,7 @@ export default class AuthRepository extends BaseRepository<User, Prisma.UserCrea
     //                     throw new AuthError(
     //                         "Invalid user type provided.",
     //                         403,
-    //                         AuthErrorCode.MISING_DATA
+    //                         ErrorCodes.MISING_DATA
     //                     )
     //             }
 
@@ -330,7 +372,7 @@ export default class AuthRepository extends BaseRepository<User, Prisma.UserCrea
     //         throw new AuthError(
     //             'An unexpected error occurred while creating your account. Please try again later.',
     //             500,
-    //             AuthErrorCode.INTERNAL_ERROR
+    //             ErrorCodes.INTERNAL_ERROR
     //         )
     //     }
         
@@ -341,19 +383,19 @@ export default class AuthRepository extends BaseRepository<User, Prisma.UserCrea
     //         throw new AuthError(
     //             "We have no exisitng user account  with this email, kindly register to get started.",
     //             401,
-    //             AuthErrorCode.USER_NOT_FOUND
+    //             ErrorCodes.USER_NOT_FOUND
     //         )
     //     }else if(user.status === $Enums.UserStatus.deleted){
     //         throw new AuthError(
     //             "This account does not exist",
     //             401,
-    //             AuthErrorCode.ACCOUNT_RESTRICTED
+    //             ErrorCodes.ACCOUNT_RESTRICTED
     //         )
     //     }else if(user.status !== $Enums.UserStatus.active){
     //         throw new AuthError(
     //             "This account is restricted possibly from abuse or account deactivation. Contact administrators",
     //             401,
-    //             AuthErrorCode.ACCOUNT_RESTRICTED
+    //             ErrorCodes.ACCOUNT_RESTRICTED
     //         )
     //     }
     // }
@@ -384,7 +426,7 @@ export default class AuthRepository extends BaseRepository<User, Prisma.UserCrea
     //         throw new AuthError(
     //             'An unexpected json error occurred. Please try again later.',
     //             500,
-    //             AuthErrorCode.INTERNAL_ERROR
+    //             ErrorCodes.INTERNAL_ERROR
     //         )
     //     }
         

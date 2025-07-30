@@ -1,4 +1,4 @@
-export enum AuthErrorCode {
+export enum ErrorCodes {
   USER_NOT_FOUND = 'USER_NOT_FOUND',
   MISING_DATA = 'MISING_DATA',
   EMAIL_ALREADY_EXISTS = 'EMAIL_ALREADY_EXISTS',
@@ -8,7 +8,13 @@ export enum AuthErrorCode {
   ACCOUNT_RESTRICTED = 'ACCOUNT_RESTRICTED',
   TOKEN_EXPIRED = 'TOKEN_EXPIRED',
   TOKEN_INVALID = 'TOKEN_INVALID',
-  INTERNAL_ERROR = 'INTERNAL_ERROR'
+
+
+  // general
+  INTERNAL_ERROR = 'INTERNAL_ERROR',
+
+  // baserepository errors
+  RETRY_MAXEDOUT = 'RETRY_MAXEDOUT',
   
 }
 

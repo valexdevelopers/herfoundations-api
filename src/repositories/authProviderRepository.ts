@@ -7,7 +7,7 @@ import { AuthProvider } from "../../@prisma/client";
 import Logger from "../utils/log";
 import { ICacheHandler } from "../utils/interfaces/base.interfaces";
 import { AuthError } from "../utils/errorhandlers";
-import { AuthErrorCode } from "../utils/enums";
+import { ErrorCodes } from "../utils/enums";
 
 /**
  * Repository for managing authProvider relations.
@@ -27,7 +27,12 @@ import { AuthErrorCode } from "../utils/enums";
  * @see AuthProvider
  */
 
-export class AuthProviderRepository extends BaseRepository<AuthProvider, Prisma.AuthProviderCreateInput, Prisma.AuthProviderFindUniqueArgs, Prisma.AuthProviderUpdateInput>{
+export class AuthProviderRepository extends BaseRepository<
+                                            AuthProvider, 
+                                            Prisma.AuthProviderCreateInput, 
+                                            Prisma.AuthProviderFindUniqueArgs, 
+                                            Prisma.AuthProviderUpdateInput,
+                                            Prisma.AuthProviderUpsertArgs>{
      #logHandler: Logger
  
      constructor(
@@ -67,7 +72,7 @@ export class AuthProviderRepository extends BaseRepository<AuthProvider, Prisma.
             throw new AuthError(
                 "Sever error! An unexpected error occurred with third party authentication.",
                 500,
-                AuthErrorCode.AUTH_FAILED
+                ErrorCodes.AUTH_FAILED
             ) 
         }
     }
@@ -162,7 +167,12 @@ export class AuthProviderRepository extends BaseRepository<AuthProvider, Prisma.
  * @see AuthProvider
  */
 
-export class PersonalAccessRepository extends BaseRepository<PersonalAccessToken, Prisma.PersonalAccessTokenCreateInput, Prisma.PersonalAccessTokenFindUniqueArgs, Prisma.PersonalAccessTokenUpdateInput>{
+export class PersonalAccessRepository extends BaseRepository<
+                                                PersonalAccessToken, 
+                                                Prisma.PersonalAccessTokenCreateInput, 
+                                                Prisma.PersonalAccessTokenFindUniqueArgs, 
+                                                Prisma.PersonalAccessTokenUpdateInput, 
+                                                Prisma.PersonalAccessTokenUpsertArgs>{
      #logHandler: Logger
  
      constructor(
@@ -195,6 +205,15 @@ export class PersonalAccessRepository extends BaseRepository<PersonalAccessToken
         }
     }
   
+    async upsert(data: Prisma.PersonalAccessTokenUpsertArgs): Promise<PersonalAccessToken> {
+        try {
+            return await super.upsert(data); 
+        } catch (error) {
+            this.#logHandler.alarm("PatientRepository/upsert", JSON.stringify(`failed to upsert user at ${Date.now()} data: ${data} due to ${error}`))
+            throw error
+        }    
+    }
+
     // public async findOneByIdProvider(userId: string, provider: $Enums.AuthenticationProviders){
     //     const data: Prisma.AuthProviderFindUniqueArgs ={
     //         where: {
