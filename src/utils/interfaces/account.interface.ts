@@ -20,6 +20,7 @@ export interface IAuthRepository {
     findOneByEmail(email:string): Promise<any>
     findOneById(id: string): Promise<any>
     verifyUser(id: string, token: string): Promise<any>
+    upsertVerificationToken(userId: string): Promise<any>
 }
 
 export interface IAuthProviderRepository {

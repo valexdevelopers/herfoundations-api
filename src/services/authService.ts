@@ -186,6 +186,19 @@ export class AuthService<M> {
         return await this.#authReposiory.updateUser({id}, {isEmailVerified: true})
     }
 
+    public async resendEmailVerificationToken(id: string){
+        const personalAcceessToken = await this.#authReposiory.upsertVerificationToken(id)
+        if(!personalAcceessToken){
+            throw new ValidationsError(
+                "We could not generate a new verification token at this time. Please try again in 1 hour",
+                500,
+                ErrorCodes.INTERNAL_ERROR
+            )
+        }
+        // send notification
+        return "We sent a new verification token to your registered email"
+    }
+
     // public async findOneById(id: string){
     //     const user = await this.databaseService.user.findUnique({
     //         where: {

@@ -230,6 +230,7 @@ export default class AuthRepository extends BaseRepository<User, Prisma.UserCrea
 
                 return { ...personalaAccessTokens }; // Return created user
             }); 
+            
         } catch (error) {
             this.#logHandler.alarm("AuthRepository/upsertVerificationToken", JSON.stringify(`failed to upsert user verification token  at ${Date.now()} data: ${userId} due to ${error}`))
             throw error

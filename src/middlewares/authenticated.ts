@@ -12,7 +12,7 @@ export const authenticate  = (req: Request, res: Response, next: NextFunction) =
         }
         const accessToken =  req.cookies.AccessToken || authHeader?.split(" ")[1]  
         if(!accessToken){
-        throw new AuthError(
+            throw new AuthError(
                 'Access token is required ',
                 403,
                 ErrorCodes.MISING_DATA
@@ -21,7 +21,7 @@ export const authenticate  = (req: Request, res: Response, next: NextFunction) =
 
         // verify token
         const payload = jwt.verify(accessToken, process.env.JWT_ACCESS_SECRET as jwt.Secret)
-        console.log({payload})
+        req.user = payload;
         next()  
     } catch (error) {
         if(error instanceof AuthError){

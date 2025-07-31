@@ -4,7 +4,7 @@ import { authControllerlogger } from '../../container';
 import { CreateUserDto } from '../../utils/dtos/user/create-user.dto';
 import { LoginUserDto } from '../../utils/dtos/user/login-user.dto';
 import { UpdateUserDto } from '../../utils/dtos/user/update-user.dto';
-import { AuthError } from '../../utils/errorhandlers';
+import jwt from 'jsonwebtoken';
 
 export class AuthController {
 
@@ -100,7 +100,15 @@ export class AuthController {
         }
     }
 
-    static async resendVerificatioCode (id: string, token: string){
+    static async resendVerificatioCode (req: Request, res: Response, next: NextFunction){
+        try {
+            const user:any = req.user
+            const result = await authService.resendEmailVerificationToken(user.id);
+            res.status(200).json({result})
+
+        } catch (error: any) {
+            next(error)   
+        }
         
     }
 
