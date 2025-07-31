@@ -109,7 +109,6 @@ export class AuthController {
         } catch (error: any) {
             next(error)   
         }
-        
     }
 
     static async update(req: Request, res: Response, next: NextFunction): Promise<any> {

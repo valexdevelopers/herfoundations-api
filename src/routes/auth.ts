@@ -7,5 +7,6 @@ router.post('/login', AuthController.login);
 router.post('/register', AuthController.register);
 router.post('/refresh', AuthController.refresh);
 router.post('/verify-email', authenticate, AuthController.verifyEmail);
+router.post('/resend-verification', authenticate, AuthController.resendVerificatioCode);
 
 export default router;
