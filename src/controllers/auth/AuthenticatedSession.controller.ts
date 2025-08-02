@@ -89,8 +89,8 @@ export class AuthController {
 
     static async verifyEmail(req: Request, res: Response, next: NextFunction){
         try {
-           
-            const result = await authService.verify(req.body.id, req.body.token);
+            const user:any = req.user
+            const result = await authService.verify(user.id, req.body.token);
             res.status(200).json({result})
            
             
