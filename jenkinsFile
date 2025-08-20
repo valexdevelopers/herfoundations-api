@@ -53,7 +53,7 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo 'Building the project...'
+                echo 'Building the project ...'
                 timeout(time: 10, unit: 'MINUTES') {
                     sh 'npm run build'
                 }
