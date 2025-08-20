@@ -114,6 +114,7 @@ export class AuthController {
     
     static async changePrimaryEmail (req: Request, res: Response, next: NextFunction){
         try {
+            console.log('git here')
             const user:any = req.user
             const result = await authService.resendEmailVerificationToken(user.id);
             res.status(200).json({result})
