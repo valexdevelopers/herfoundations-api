@@ -124,6 +124,17 @@ export class AuthController {
         }
     }
 
+    static async changePassword (req: Request, res: Response, next: NextFunction){
+        try {
+            console.log('git here')
+            const user:any = req.user
+            const result = await authService.resendEmailVerificationToken(user.id);
+            res.status(200).json({result})
+
+        } catch (error: any) {
+            next(error)   
+        }
+    } 
     static async update(req: Request, res: Response, next: NextFunction): Promise<any> {
         try {
 
