@@ -5,7 +5,7 @@ pipeline {
         AWS_REGION = 'eu-north-1'
         ACCOUNT_ID = credentials('aws_account_id')
         GITHUB_TOKEN = credentials('GITHUB-ACCESS-TOKEN')
-        EC2_HOST = 'ubuntu@ec2-13-61-137-254.eu-north-1.compute.amazonaws.com'      // change user and IP accordingly
+        EC2_HOST = credentials('EC2_HOST') 
         SSH_KEY = credentials('EC2_DEPLOY_KEY')
     }
 
@@ -37,7 +37,7 @@ pipeline {
                         $class: 'GitSCM',
                         branches: [[name: "*/${branchName}"]],
                         userRemoteConfigs: [[
-                            url: "https://${GITHUB_TOKEN}@github.com/enterpriseapptech/banquetproapi.git"
+                            url: "https://${GITHUB_TOKEN}@github.com/valexdevelopers/herfoundations-api.git"
                         ]]
                     ])
                 }
@@ -106,17 +106,7 @@ pipeline {
 }
 
 def deployService(Map svc) {
-    def repo = svc.repo
-    def path = svc.path
-    def build = svc.build 
-    def serviceName = svc.service
     def envFileCredentialId = svc.envFile
-    def containerName = serviceName // you can customize this
-    def localImage = "${svc.localImage}:${BUILD_NUMBER}"
-    def port = svc.port
-    def rm = svc.rm
-    def prisma = svc.prisma
-    def start= svc.start
 
     withCredentials([file(credentialsId: envFileCredentialId, variable: 'ENV_FILE')]) {
         sh '''#!/bin/bash
@@ -231,8 +221,8 @@ def deployService(Map svc) {
 
 
 def updateGitHubStatus(status, description) {
-    def repoOwner = 'enterpriseapptech'
-    def repoName = 'banquetproapi'
+    def repoOwner = 'valexdevelopers'
+    def repoName = 'herfoundations-api'
     def apiUrl = "https://api.github.com/repos/${repoOwner}/${repoName}/statuses/${GIT_COMMIT}"
 
     def payload = new groovy.json.JsonBuilder([
