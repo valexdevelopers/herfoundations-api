@@ -6,7 +6,7 @@ pipeline {
         ACCOUNT_ID = credentials('aws_account_id')
         GITHUB_TOKEN = credentials('GITHUB-ACCESS-TOKEN')
         EC2_HOST = credentials('EC2_HOST') 
-        SSH_KEY = credentials('EC2_DEPLOY_KEY')
+        SSH_KEY = credentials('EC2_DEPLOYMENT_KEY')
     }
 
     options {
@@ -133,20 +133,19 @@ def deployService(Map svc) {
             rm -rf temporary || true
 
             echo "Installing dependencies"
-            cd temporary && npm install
+            npm install
 
             echo "npm running Build and prism generating"
             npx prisma generate
             npm run build
  
-            echo "Creating herfoundations.tar.gz with microservice and config files and Compressing artifacts..."
+            echo "Creating herfoundations.tar.gz with source, config files and Compressing artifacts..."
             
-            tar -czf herfoundations.tar.gz dist apps package.json package-lock.json .env
+            tar -czf herfoundations.tar.gz prisma dist package.json package-lock.json .env
             pwd
-
         """
 
-        sshagent(credentials: ['EC2_DEPLOY_KEY']) {
+        sshagent(credentials: ['EC2_DEPLOYMENT_KEY']) {
             sh """
                 echo "Listing contents of working directory..."
                 pwd
@@ -168,7 +167,7 @@ def deployService(Map svc) {
                 ssh -o StrictHostKeyChecking=no ${EC2_HOST} "tar -xzf /home/ubuntu/herfoundations.tar.gz -C /home/ubuntu/herfoundations"
 
                 echo "Changing into service directory"
-                ssh -o StrictHostKeyChecking=no ${EC2_HOST} "cd /home/ubuntu/herfoundations && ls -la && cp -r /* ."
+                ssh -o StrictHostKeyChecking=no ${EC2_HOST} "cd /home/ubuntu/herfoundations && ls -la"
 
                 echo "Installing dependencies"
                 ssh -o StrictHostKeyChecking=no ${EC2_HOST} "cd /home/ubuntu/herfoundations && npm ci --production"
