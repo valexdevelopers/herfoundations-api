@@ -47,7 +47,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo 'Installing npm dependencies...'
-                sh 'npm install --frozen-lockfile'
+                sh 'npm ci'
             }
         }
 

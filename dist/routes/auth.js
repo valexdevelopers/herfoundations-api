@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const AuthenticatedSession_controller_1 = require("../controllers/auth/AuthenticatedSession.controller");
+const authenticated_1 = require("../middlewares/authenticated");
+const router = (0, express_1.Router)();
+router.post('/login', AuthenticatedSession_controller_1.AuthController.login);
+router.post('/register', AuthenticatedSession_controller_1.AuthController.register);
+router.post('/refresh', AuthenticatedSession_controller_1.AuthController.refresh);
+router.post('/verify-email', authenticated_1.authenticate, AuthenticatedSession_controller_1.AuthController.verifyEmail);
+router.post('/resend-verification', authenticated_1.authenticate, AuthenticatedSession_controller_1.AuthController.resendVerificatioCode);
+exports.default = router;

@@ -21,7 +21,7 @@ import { ICacheHandler } from "../utils/interfaces/base.interfaces";
  * @see PatientModel
  */
 
-export default class PatientRepository extends BaseRepository<Patient, Prisma.PatientCreateInput, Prisma.PatientFindUniqueArgs, Prisma.PatientUpdateInput>{
+export default class PatientRepository extends BaseRepository<Patient, Prisma.PatientCreateInput, Prisma.PatientFindUniqueArgs, Prisma.PatientUpdateInput, Prisma.PatientUpsertArgs>{
     #logHandler: Logger
     constructor(
         redis: ICacheHandler,
