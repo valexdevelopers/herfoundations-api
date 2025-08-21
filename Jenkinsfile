@@ -138,7 +138,8 @@ def deployService(Map svc) {
             ls -la
 
             rm -rf temporary || true
-            mkdir temporary
+            mkdir -p temporary
+            chmod -R 755 temporary
 
             echo "Copying to temporary directory"
             rsync -av --exclude=temporary/ --exclude=node_modules/ ./ temporary/
