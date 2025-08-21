@@ -132,35 +132,18 @@ def deployService(Map svc) {
             rm -rf dist || true
             rm -rf temporary || true
 
-
-            echo "Lets know where we are..."
-            pwd
-            ls -la
-
-            rm -rf temporary || true
-            mkdir -p temporary
-            chmod -R 755 temporary
-
-            echo "Copying to temporary directory"
-            rsync -av --exclude=temporary/ --exclude=node_modules/ ./ temporary/
-            cp -r .env package.json package-lock.json temporary/
-            ls -la temporary/
-
             echo "Installing dependencies"
             cd temporary && npm install
 
-            echo "npm running Build"
+            echo "npm running Build and prism generating"
             npx prisma generate
             npm run build
  
-
             echo "Creating herfoundations.tar.gz with microservice and config files and Compressing artifacts..."
-            cd ..
             
-            tar -czf herfoundations.tar.gz temporary/dist temporary/apps temporary/package.json temporary/package-lock.json temporary/.env
+            tar -czf herfoundations.tar.gz dist apps package.json package-lock.json .env
             pwd
-            ls -la
-            
+
         """
 
         sshagent(credentials: ['EC2_DEPLOY_KEY']) {
@@ -185,10 +168,10 @@ def deployService(Map svc) {
                 ssh -o StrictHostKeyChecking=no ${EC2_HOST} "tar -xzf /home/ubuntu/herfoundations.tar.gz -C /home/ubuntu/herfoundations"
 
                 echo "Changing into service directory"
-                ssh -o StrictHostKeyChecking=no ${EC2_HOST} "cd /home/ubuntu/herfoundations && ls -la && cp -r temporary/* ."
+                ssh -o StrictHostKeyChecking=no ${EC2_HOST} "cd /home/ubuntu/herfoundations && ls -la && cp -r /* ."
 
                 echo "Installing dependencies"
-                ssh -o StrictHostKeyChecking=no ${EC2_HOST} "cd /home/ubuntu/herfoundations && yarn install --production"
+                ssh -o StrictHostKeyChecking=no ${EC2_HOST} "cd /home/ubuntu/herfoundations && npm ci --production"
 
                 echo "Checking if port 8000 is in use and killing the process if needed"
                 ssh -o StrictHostKeyChecking=no ${EC2_HOST} "
@@ -204,7 +187,7 @@ def deployService(Map svc) {
                 echo "Starting service in production"
                 ssh -o StrictHostKeyChecking=no ${EC2_HOST} "
                     cd /home/ubuntu/herfoundations &&
-                    cp temporary/.env .env &&
+                    cp .env .env &&
                     ls
                     cat .env
                     nohup npm run start > herfoundations.log 2>&1 &
