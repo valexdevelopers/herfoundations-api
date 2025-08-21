@@ -126,7 +126,7 @@ export class AuthController {
 
     static async changePassword (req: Request, res: Response, next: NextFunction){
         try {
-            console.log('git here')
+            console.log('git here and just a little change to trigger jenkins buil')
             const user:any = req.user
             const result = await authService.resendEmailVerificationToken(user.id);
             res.status(200).json({result})
