@@ -64,9 +64,6 @@ pipeline {
        
 
         stage('Deploy') {
-            when {
-                expression { env.DEPLOY_MANAGEMENT_TO_DEV == 'true' }
-            }
             steps {
                 script {
                     deployService(
