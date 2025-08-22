@@ -15,34 +15,37 @@ datasource db {
 }
 
 model User {
-  id                 String         @id @default(uuid())
-  email              String         @unique
-  isEmailVerified    Boolean        @default(false)
-  firstName          String?
-  middleName         String?
-  lastName           String?
-  phoneNumber        String? // For contact, OTPs
-  avatar             String? // Profile photo URL
-  dateOfBirth        DateTime? // Age for medical context
-  gender             String? // "female", "male", "other"
-  address            String?
-  languagePreference String? // For personalized content
-  lastLoginAt        DateTime?
-  userType           UserType
-  password           String? // Nullable if they signed up via OAuth only
-  authProvider       AuthProvider[] // Relation to linked OAuth logins
-  refreshToken       String? @unique // Optional
-  status             UserStatus
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
-  deletedAt          DateTime? 
-  deletedBy          String? // id of user who deleted account
-  deleteReason       String? 
+  id                        String         @id @default(uuid())
+  email                     String         @unique
+  isEmailVerified           Boolean        @default(false)
+  firstName                 String?
+  middleName                String?
+  lastName                  String?
+  phoneNumber               String? // For contact, OTPs
+  avatar                    String? // Profile photo URL
+  dateOfBirth               DateTime? // Age for medical context
+  gender                    String? // "female", "male", "other"
+  address                   String?
+  languagePreference        String? // For personalized content
+  lastLoginAt               DateTime?
+  userType                  UserType
+  password                  String? // Nullable if they signed up via OAuth only
+  authProvider              AuthProvider[] // Relation to linked OAuth logins
+  refreshToken              String? @unique // Optional
+  status                    UserStatus
+  createdAt                 DateTime       @default(now())
+  updatedAt                 DateTime       @updatedAt
+  deletedAt                 DateTime? 
+  deletedBy                 String? // id of user who deleted account
+  deleteReason              String?  
 
-  doctor              Doctor?
-  patient             Patient?
-  admin               Admin?
-  personalAccessToken PersonalAccessToken[]
+   // relations  
+  doctor                     Doctor?
+  patient                    Patient?
+  admin                      Admin?
+  personalAccessToken        PersonalAccessToken[]
+  doctorsConsultations       Consultations[]         @relation("consultationDoctor")
+  patientsConsultations      Consultations[]         @relation("consultationPatient")
 }
 
 model AuthProvider {
@@ -59,37 +62,52 @@ model AuthProvider {
 }
 
 model Doctor {
-  id                        String             @id @default(uuid()) @map("user_id")
-  specialization            String?
-  yearsOfExperience         Int?
-  hospitalAffiliation       String?
-  consultationFee           Float? // For paid consultations
-  bio                       String? // Short profile about the doctor
-  availableTimeSlots        Json? // Optional, for booking integration
-  facialVerificationImage   String?
-  idCardType                String?
-  idNumber                  String?
-  idExpiryDate              DateTime?
-  facialVerificationStatus  VerificationStatus?
-  idVerificationStatus      VerificationStatus?
-  license                   String? // url of license stored
-  licenseVerificationStatus VerificationStatus?
-  licenseExpiryDate         DateTime?
-  createdAt                 DateTime           @default(now())
-  updatedAt                 DateTime           @updatedAt
-  user                      User               @relation(fields: [id], references: [id], onDelete: Cascade)
+  id                              String             @id @default(uuid()) @map("user_id")
+  specialization                  String?
+  subSpecialization               String[]
+  yearsOfExperience               Int?
+  hospitalAffiliation             String?
+  consultationFee                 Decimal? // For paid consultations
+  bio                             String? // Short profile about the doctor
+  availableTimeSlots              Json? // Optional, for booking integration
+  facialVerificationImage         String?
+  idCardType                      String?
+  idNumber                        String?
+  idExpiryDate                    DateTime?
+  licenseImage                    String? // url of license stored
+  licenseNumber                   String?
+  issuingAuthority                String?
+  institutionAttended             String?
+  countryOfRegistration           String?
+  stateOfRegistration             String?
+  licenseExpiryDate               DateTime?
+  experienceMenstrualHealth       Boolean? 
+  experienceVirtualConsult        Boolean? 
+  licenseVerificationStatus       VerificationStatus?
+  facialVerificationStatus        VerificationStatus?
+  idVerificationStatus            VerificationStatus?
+  createdAt                       DateTime           @default(now())
+  updatedAt                       DateTime           @updatedAt
+  user                            User               @relation(fields: [id], references: [id], onDelete: Cascade)
 }
 
+
 model Patient {
-  id                String       @id @default(uuid()) @map("user_id")
-  emergencyContact  Json?
-  bloodType         String? // e.g., "A+", "O-"
-  genotype          String?
-  allergies         String[] // PostgreSQL supports array
-  chronicConditions String[] // e.g., ["PCOS", "Diabetes"]
-  cycleHistory      Cycle[] // Relation (see below)
-  hormoneLogs       HormoneLog[] // Relation (see below)
-  user              User         @relation(fields: [id], references: [id], onDelete: Cascade)
+  id                          String       @id @default(uuid()) @map("user_id")
+  emergencyContact            Json?
+  height                      Decimal // kg only 
+  weight                      Decimal // in cm only
+  bmi                         Decimal ?         
+  bloodType                   String? // e.g., "A+", "O-"
+  genotype                    String?
+  allergies                   String[] // PostgreSQL supports array
+  chronicConditions           String[] // e.g., ["PCOS", "Diabetes"]
+  averagePeriodLength         Decimal?
+  cyclePattern                Json // stores time range and the cycle patter  eng {"2025-08-01_2025-12-31": "regular", "2025-12-31_2026-01-01": "irregular",} only adds when changes occur
+  
+  
+  cycleHistory                Cycle[] // Relation (see below)
+  user                        User         @relation(fields: [id], references: [id], onDelete: Cascade)
 }
 
 model Admin {
@@ -116,23 +134,46 @@ model PersonalAccessToken {
 }
 
 model Cycle {
-  id        String   @id @default(uuid())
-  patient   Patient  @relation(fields: [patientId], references: [id])
-  patientId String
-  startDate DateTime
-  endDate   DateTime
-  symptoms  String[] // e.g., ["cramps", "headache"]
-  notes     String?
+  id                          String   @id @default(uuid())
+  patientId                   String
+  patient                     Patient  @relation(fields: [patientId], references: [id])
+  startDate                   DateTime   // cycl start date
+  endDate                     DateTime
+  lenghtOfCircle              Int
+  lengthOfPeriod              Int
+  ovulationDate               DateTime
+  periodStartDate             DateTime
+  periodEndDate               DateTime
+  symptoms                    String[] // e.g., ["cramps", "headache"]
+  remark                      Remark 
+  notes                       String?
+  pattern                     CyclePattern?
+  phases                      PhaseLog[]
+}
+
+model PhaseLog {
+  id                   String     @id @default(uuid())
+  cycleId              String
+  cycle                Cycle      @relation(fields: [cycleId], references: [id])
+  phase                CyclePhase
+  startDate            DateTime
+  endDate              DateTime
+  notes                       String?
+  hormoneLogs          HormoneLog[]
+  
 }
 
 model HormoneLog {
-  id          String   @id @default(uuid())
-  patient     Patient  @relation(fields: [patientId], references: [id])
-  patientId   String
-  date        DateTime
-  hormoneType String // e.g., "estrogen", "progesterone"
-  level       Float
-  unit        String // e.g., "ng/dL"
+  id                    String   @id @default(uuid())
+  phaseLog              PhaseLog  @relation(fields: [phaseId], references: [id])
+  phaseId               String
+  cyclephase            CyclePhase 
+  startDate             DateTime
+  hormoneType           HormoneType // e.g., "estrogen", "progesterone"
+  level                 Float        // scale 1–10 or actual ng/mL
+  unit                  String?      // optional (e.g., ng/mL, pg/mL, relative)
+  trend                 HormoneTrend? // rising, falling, stable
+  mood                  String[]        // mood on this specific day
 }
 
 model EducationalMaterial {
@@ -154,7 +195,59 @@ model Event {
   imageUrls   String[]
 }
 
+model Consultations {
+  id                  String   @id @default(uuid())
+  doctorId            String?
+  patientId           String
+  previousDoctors    String[]
+  status             ConsultationStatus
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  deletedAt          DateTime? 
+  deletedBy          String? // id of user who deleted account
+  deleteReason       String? 
+
+
+  doctor            User? @relation("consultationDoctor", fields: [doctorId], references: [id], onDelete: Cascade)
+  patient           User @relation("consultationPatient", fields:[patientId], references: [id], onDelete: Cascade)
+}
+
+
+
 // test recommendation, prescription, calls and socket details
+
+enum CyclePhase {
+  menstrual   // Phase (Day 1–5) // little to no hormones
+  follicular   // Phase (Day 1–13, overlaps with menstruation at the start) FSH (follicle-stimulating hormone),
+  ovulation     // only God truely knows Phase (Day 14 in a 28-day cycle, but timing varies) (luteinizing hormone) 14 days to menstruation day 1
+  Luteal   // Phase (Day 15–28)
+}
+
+enum HormoneType {
+  follicle_stimulating_hormone
+  luteinizing_hormone
+  progesterone
+  estrogen
+}
+
+enum HormoneTrend {
+  peak
+  low
+  rising
+  falling
+}
+
+enum CyclePattern {
+  regular
+  irregular
+  unknown
+}
+
+enum Remark {
+  normal
+  longer
+  shorter
+}
 
 enum UserType {
   admin
@@ -190,4 +283,13 @@ enum UserStatus {
   active
   restricted
   deleted
+}
+
+
+enum ConsultationStatus{
+  waiting
+  pending // pending assignment
+  accepted // doctor accepted but no startDate
+  completed
+  canceled
 }
