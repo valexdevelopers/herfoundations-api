@@ -145,7 +145,7 @@ model Cycle {
   periodStartDate             DateTime
   periodEndDate               DateTime
   symptoms                    String[] // e.g., ["cramps", "headache"]
-  remark                      Remark 
+  remark                      Remark? 
   notes                       String?
   pattern                     CyclePattern?
   phases                      PhaseLog[]
@@ -158,7 +158,7 @@ model PhaseLog {
   phase                CyclePhase
   startDate            DateTime
   endDate              DateTime
-  notes                       String?
+  notes                String?
   hormoneLogs          HormoneLog[]
   
 }
@@ -167,7 +167,6 @@ model HormoneLog {
   id                    String   @id @default(uuid())
   phaseLog              PhaseLog  @relation(fields: [phaseId], references: [id])
   phaseId               String
-  cyclephase            CyclePhase 
   startDate             DateTime
   hormoneType           HormoneType // e.g., "estrogen", "progesterone"
   level                 Float        // scale 1–10 or actual ng/mL

@@ -136,4 +136,14 @@ export class AuthController {
             next(err);
         }
     }
+
+    static async patientOnboard(req:Request, res:Response, next: NextFunction){
+        try {
+            const user:any = req.user
+
+            
+        } catch (error) {
+            next(error)
+        }
+    }
 }

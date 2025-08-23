@@ -239,6 +239,8 @@ export class AuthService<M> {
         }
     }
 
+    
+
     // public async delete(id: string, deletedBy: string, deleteReason:string ){
     //     const user = await this.databaseService.user.update({
     //         data: {
