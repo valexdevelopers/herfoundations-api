@@ -95,15 +95,15 @@ model Doctor {
 model Patient {
   id                          String       @id @default(uuid()) @map("user_id")
   emergencyContact            Json?
-  height                      Decimal // kg only 
-  weight                      Decimal // in cm only
+  height                      Decimal? // kg only 
+  weight                      Decimal? // in cm only
   bmi                         Decimal ?         
   bloodType                   String? // e.g., "A+", "O-"
   genotype                    String?
   allergies                   String[] // PostgreSQL supports array
   chronicConditions           String[] // e.g., ["PCOS", "Diabetes"]
   averagePeriodLength         Decimal?
-  cyclePattern                Json // stores time range and the cycle patter  eng {"2025-08-01_2025-12-31": "regular", "2025-12-31_2026-01-01": "irregular",} only adds when changes occur
+  cyclePattern                Json? // stores time range and the cycle patter  eng {"2025-08-01_2025-12-31": "regular", "2025-12-31_2026-01-01": "irregular",} only adds when changes occur
   
   
   cycleHistory                Cycle[] // Relation (see below)
@@ -219,7 +219,7 @@ enum CyclePhase {
   menstrual   // Phase (Day 1–5) // little to no hormones
   follicular   // Phase (Day 1–13, overlaps with menstruation at the start) FSH (follicle-stimulating hormone),
   ovulation     // only God truely knows Phase (Day 14 in a 28-day cycle, but timing varies) (luteinizing hormone) 14 days to menstruation day 1
-  Luteal   // Phase (Day 15–28)
+  luteal   // Phase (Day 15–28)
 }
 
 enum HormoneType {

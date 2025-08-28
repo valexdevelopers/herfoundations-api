@@ -158,6 +158,10 @@ export class PatientOnboardingDto {
   @IsEnum(CyclePattern)
   pattern!: CyclePattern;
 
+  @IsOptional()
+  @IsInt()
+  lenghtOfCircle?: number;
+
   @IsNotEmpty()
   @IsDateString()
   periodStartDate!: string;
